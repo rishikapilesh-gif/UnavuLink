@@ -1,328 +1,311 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { 
-  ShieldCheck, 
-  Sparkles, 
-  Navigation, 
-  MapPin, 
-  Users, 
-  Cpu, 
-  ArrowRight, 
-  CheckCircle2, 
-  HeartHandshake, 
-  Flame, 
-  Clock, 
-  QrCode,
-  Truck,
-  RotateCcw
-} from 'lucide-react';
-import { TamilNaduMap } from '../../components/maps/TamilNaduMap';
-import { store } from '../../services/store';
+import { useStore } from '../../hooks/useStore';
+import { FoodCard } from '../../components/common/FoodCard';
+import { FoodDetailsModal } from '../../components/common/FoodDetailsModal';
+import { RequestModal } from '../../components/common/RequestModal';
 import { QRPassportModal } from '../../components/qr/QRPassportModal';
-import { FoodListing } from '../../types';
+import { TamilNaduMap } from '../../components/maps/TamilNaduMap';
+import { FoodListing, DonationRequest } from '../../types';
+import { 
+  Search, 
+  MapPin, 
+  Flame, 
+  ShieldCheck, 
+  QrCode, 
+  Utensils, 
+  ArrowRight, 
+  Clock, 
+  Sparkles,
+  HeartHandshake,
+  CheckCircle2,
+  Navigation
+} from 'lucide-react';
+
+const CATEGORIES = [
+  { id: 'all', label: 'All Food', icon: '🌟' },
+  { id: 'cooked', label: 'Cooked Meals', icon: '🍲' },
+  { id: 'veg', label: 'Pure Veg', icon: '🟢' },
+  { id: 'non-veg', label: 'Non-Veg', icon: '🔴' },
+  { id: 'bakery', label: 'Bakery & Bread', icon: '🍞' },
+  { id: 'produce', label: 'Fresh Produce', icon: '🥗' },
+  { id: 'urgent', label: 'Urgent Rescues', icon: '⏰' },
+  { id: 'emergency', label: 'Emergency Surplus', icon: '🚨' }
+];
 
 export const LandingPage: React.FC = () => {
+  const store = useStore();
   const { switchDemoRole } = useAuth();
   const navigate = useNavigate();
-  const listings = store.getListings();
-  const orgs = store.getProfiles().map(p => ({
-    id: `org-${p.id}`,
-    profile_id: p.id,
-    organisation_name: p.full_name,
-    organisation_type: p.role === 'NGO' ? 'NGO Shelter' : 'Donor Kitchen',
-    address: p.location || 'Coimbatore',
-    city: p.city,
-    latitude: p.latitude,
-    longitude: p.longitude,
-    contact_phone: p.phone || '',
-    verification_status: 'verified' as const,
-    receiving_capacity_kg: 100,
-    storage_capabilities: ['refrigeration'],
-    operating_hours: '08:00 - 22:00'
-  }));
-  const hotspots = store.getHotspots();
-  const hubs = store.getHubs();
 
-  const [selectedPassportListing, setSelectedPassportListing] = useState<FoodListing | null>(null);
+  const [activeCategory, setActiveCategory] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedFood, setSelectedFood] = useState<FoodListing | null>(null);
+  const [requestingFood, setRequestingFood] = useState<FoodListing | null>(null);
+  const [selectedPassport, setSelectedPassport] = useState<FoodListing | null>(null);
+
+  const listings = store.getListings();
+  const hubs = store.getHubs();
+  const missions = store.getMissions();
+  const activeCity = store.getSelectedCity();
+
+  // Filter listings based on Swiggy-style category pill and search query
+  const filteredListings = listings.filter(l => {
+    // Category match
+    if (activeCategory === 'cooked' && l.food_category !== 'Cooked Meals') return false;
+    if (activeCategory === 'veg' && l.dietary_category !== 'Vegetarian') return false;
+    if (activeCategory === 'non-veg' && l.dietary_category !== 'Non-Vegetarian') return false;
+    if (activeCategory === 'bakery' && l.food_category !== 'Bakery') return false;
+    if (activeCategory === 'produce' && l.food_category !== 'Raw Produce') return false;
+    if (activeCategory === 'emergency' && !l.is_emergency) return false;
+    if (activeCategory === 'urgent') {
+      const now = new Date().getTime();
+      const deadline = new Date(l.permitted_handling_deadline).getTime();
+      const diffHours = (deadline - now) / (1000 * 3600);
+      if (diffHours > 2.5) return false;
+    }
+
+    // Search query match
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      const matchName = l.food_name.toLowerCase().includes(q);
+      const matchCat = l.food_category.toLowerCase().includes(q);
+      const matchLoc = l.pickup_location.toLowerCase().includes(q);
+      const matchBatch = l.batch_id.toLowerCase().includes(q);
+      if (!matchName && !matchCat && !matchLoc && !matchBatch) return false;
+    }
+
+    return true;
+  });
 
   return (
-    <div className="space-y-16 pb-20">
-      {/* HERO SECTION */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-cream via-cream to-white pt-12 pb-16 border-b border-sage">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-            {/* Hero Left Content */}
-            <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-forest/10 text-forest text-xs font-bold">
-                <Sparkles className="w-4 h-4 text-orange-warm" />
-                <span>AI-Powered Food Rescue & Redistribution Ecosystem</span>
-              </div>
-
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-charcoal tracking-tight leading-[1.15]">
-                Every Meal Deserves a Destination.
-              </h1>
-
-              <p className="text-base sm:text-lg text-muted max-w-2xl leading-relaxed">
-                UnavuLink connects surplus food with communities that need it through intelligent matching, safer handling, verified delivery and coordinated rescue operations across Tamil Nadu.
-              </p>
-
-              {/* CTAs */}
-              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3.5 pt-2">
-                <button
-                  onClick={() => {
-                    switchDemoRole('Donor');
-                    navigate('/donor/donate');
-                  }}
-                  className="px-6 py-3.5 bg-forest hover:bg-forest-dark text-white rounded-subtle font-bold text-sm transition-all shadow-md flex items-center gap-2 group"
-                >
-                  <span>Donate Food</span>
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </button>
-
-                <Link
-                  to="/map"
-                  className="px-6 py-3.5 bg-white border border-sage text-charcoal hover:border-forest rounded-subtle font-bold text-sm transition-all shadow-xs flex items-center gap-2"
-                >
-                  <MapPin className="w-4 h-4 text-orange-warm" />
-                  <span>Explore Food Map</span>
-                </Link>
-
-                <button
-                  onClick={() => {
-                    switchDemoRole('Common People');
-                    navigate('/community/volunteer');
-                  }}
-                  className="px-5 py-3.5 bg-orange-warm hover:bg-orange-warm/90 text-white rounded-subtle font-bold text-sm transition-all shadow-xs flex items-center gap-2"
-                >
-                  <Truck className="w-4 h-4" />
-                  <span>Become a Volunteer</span>
-                </button>
-              </div>
-
-              {/* Verified Trust Badges */}
-              <div className="pt-4 flex flex-wrap items-center justify-center lg:justify-start gap-4 text-xs font-semibold text-charcoal">
-                <div className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-full border border-sage shadow-2xs">
-                  <ShieldCheck className="w-4 h-4 text-status-success" />
-                  <span>FSSAI Compliant Safety Gate</span>
-                </div>
-                <div className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-full border border-sage shadow-2xs">
-                  <QrCode className="w-4 h-4 text-forest" />
-                  <span>QR Food Safety Passport</span>
-                </div>
-                <div className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-full border border-sage shadow-2xs">
-                  <RotateCcw className="w-4 h-4 text-orange-warm" />
-                  <span>Self-Recovering Logistics</span>
-                </div>
-              </div>
+    <div className="space-y-10 pb-24">
+      {/* SWIGGY-INSPIRED HERO & SEARCH SECTION */}
+      <section className="bg-gradient-to-b from-cream via-cream to-white pt-8 pb-10 border-b border-sage">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+          <div className="text-center max-w-2xl mx-auto space-y-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-forest/10 text-forest text-xs font-bold">
+              <Sparkles className="w-3.5 h-3.5 text-orange-warm" />
+              <span>Smart Food Rescue Network • Tamil Nadu</span>
             </div>
 
-            {/* Hero Right Visual: Live Rescue Card */}
-            <div className="lg:col-span-5">
-              <div className="bg-white rounded-card shadow-lift border border-sage p-6 space-y-4">
-                <div className="flex items-center justify-between border-b border-sage/60 pb-3">
+            <h1 className="text-3xl sm:text-5xl font-extrabold text-charcoal tracking-tight leading-tight">
+              Good Food Should Never Go to Waste.
+            </h1>
+
+            <p className="text-xs sm:text-sm text-muted leading-relaxed">
+              Discover available surplus food, connect with nearby shelters and community fridges, and ensure every prepared meal reaches a dining table.
+            </p>
+          </div>
+
+          {/* Swiggy-Style Search Bar */}
+          <div className="max-w-xl mx-auto relative">
+            <div className="relative shadow-md rounded-2xl overflow-hidden border border-sage bg-white flex items-center">
+              <Search className="w-5 h-5 text-muted ml-4 shrink-0" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search for biryani, meals, rotis, bakery, or area..."
+                className="w-full py-3.5 px-3 text-xs sm:text-sm text-charcoal focus:outline-none bg-transparent font-medium"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="mr-3 text-xs text-muted hover:text-charcoal font-bold px-2 py-1"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Quick CTAs */}
+          <div className="flex items-center justify-center gap-3 pt-1">
+            <button
+              onClick={() => {
+                switchDemoRole('Donor');
+                navigate('/donor/donate');
+              }}
+              className="px-5 py-2.5 bg-forest hover:bg-forest-dark text-white rounded-subtle font-extrabold text-xs shadow-sm transition-all flex items-center gap-1.5"
+            >
+              <span>+ Donate Surplus Food</span>
+            </button>
+            <Link
+              to="/map"
+              className="px-5 py-2.5 bg-white border border-sage text-charcoal hover:border-forest rounded-subtle font-bold text-xs shadow-2xs flex items-center gap-1.5 transition-all"
+            >
+              <MapPin className="w-4 h-4 text-orange-warm" />
+              <span>Live Food Map</span>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* SWIGGY-STYLE HORIZONTAL CATEGORY SHORTCUTS */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+          {CATEGORIES.map(cat => {
+            const isActive = activeCategory === cat.id;
+            return (
+              <button
+                key={cat.id}
+                onClick={() => setActiveCategory(cat.id)}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-xs font-bold whitespace-nowrap transition-all shrink-0 ${
+                  isActive
+                    ? 'bg-forest text-white shadow-sm ring-2 ring-forest/20'
+                    : 'bg-white text-charcoal border border-sage hover:border-forest/50'
+                }`}
+              >
+                <span>{cat.icon}</span>
+                <span>{cat.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* NEARBY AVAILABLE FOOD FEED (Swiggy Food Card Grid) */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-5">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl sm:text-2xl font-extrabold text-charcoal tracking-tight">
+              Surplus Food Available Near {activeCity}
+            </h2>
+            <p className="text-xs text-muted">Hygienically verified by the Safety Gate and ready for immediate collection.</p>
+          </div>
+          <span className="text-xs font-extrabold text-forest bg-forest/10 px-3 py-1 rounded-full">
+            {filteredListings.length} Available Batches
+          </span>
+        </div>
+
+        {filteredListings.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredListings.map(listing => (
+              <FoodCard
+                key={listing.id}
+                listing={listing}
+                onCardClick={(l) => setSelectedFood(l)}
+                onRequestClick={(l) => setRequestingFood(l)}
+                onPassportClick={(l) => setSelectedPassport(l)}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="bg-white rounded-card p-12 text-center border border-sage space-y-3">
+            <span className="text-3xl">🍲</span>
+            <h3 className="text-base font-bold text-charcoal">No surplus batches found matching "{searchQuery}"</h3>
+            <p className="text-xs text-muted">Try clearing your search query or selecting "All Food".</p>
+            <button
+              onClick={() => {
+                setActiveCategory('all');
+                setSearchQuery('');
+              }}
+              className="px-4 py-2 bg-forest text-white rounded-subtle font-bold text-xs"
+            >
+              Reset Filters
+            </button>
+          </div>
+        )}
+      </section>
+
+      {/* ACTIVE RESCUE MISSIONS STREAM (Delivery Tracking Widget) */}
+      {missions.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-status-success animate-ping" />
+              <h3 className="font-extrabold text-base text-charcoal">Live Rescue Dispatches</h3>
+            </div>
+            <Link to="/map" className="text-xs font-bold text-forest hover:underline">
+              View on live map →
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {missions.map(m => (
+              <div key={m.id} className="p-4 bg-white rounded-card border border-sage shadow-soft flex items-center justify-between gap-4 text-xs">
+                <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="w-3 h-3 rounded-full bg-status-success animate-ping"></span>
-                    <span className="font-extrabold text-xs text-charcoal uppercase tracking-wider">
-                      Live Tamil Nadu Rescue
+                    <span className="font-mono font-bold text-forest bg-forest/10 px-2 py-0.5 rounded">
+                      {m.batch_id}
                     </span>
+                    <span className="font-bold text-charcoal">{m.food_name}</span>
                   </div>
-                  <span className="text-[11px] font-bold bg-orange-warm/15 text-orange-warm px-2 py-0.5 rounded-full">
-                    Active Dispatch
+                  <p className="text-muted">
+                    Volunteer <strong>{m.volunteer_name || 'Assigned'}</strong> en route to {m.recipient_name}
+                  </p>
+                  <span className="text-forest font-semibold flex items-center gap-1">
+                    <Clock className="w-3.5 h-3.5 text-orange-warm" />
+                    <span>ETA ~{m.estimated_duration_mins} mins • Distance: {m.distance_km} km</span>
                   </span>
                 </div>
 
-                <div className="space-y-3">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="font-bold text-charcoal text-base">South Indian Sambar Rice & Poriyal</h3>
-                      <p className="text-xs text-muted">Grand Palace Banquet, Peelamedu, Coimbatore</p>
-                    </div>
-                    <span className="font-mono text-xs font-bold text-forest bg-forest/10 px-2 py-1 rounded">
-                      60 kg
-                    </span>
-                  </div>
-
-                  {/* Route Bar */}
-                  <div className="bg-cream p-3 rounded-subtle border border-sage space-y-2 text-xs">
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted">Destination:</span>
-                      <span className="font-bold text-charcoal">Anbalayam Children Shelter (7.8 km)</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted">Assigned Volunteer:</span>
-                      <span className="font-bold text-forest">Karthik Subramanian (Bike)</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted">Estimated Arrival:</span>
-                      <span className="font-extrabold text-orange-warm">22 mins remaining</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-1">
-                    <button
-                      onClick={() => setSelectedPassportListing(listings[1] || listings[0])}
-                      className="text-xs font-bold text-forest hover:text-forest-dark flex items-center gap-1.5"
-                    >
-                      <QrCode className="w-4 h-4 text-orange-warm" />
-                      <span>View Food Safety Passport</span>
-                    </button>
-                    <span className="text-[11px] text-muted">Batch: UNV-2026-CBE-002</span>
-                  </div>
+                <div className="shrink-0 text-right">
+                  <span className="bg-orange-warm/15 text-orange-warm font-extrabold text-[10px] px-2.5 py-1 rounded-full uppercase">
+                    In Transit
+                  </span>
                 </div>
               </div>
-            </div>
+            ))}
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
-      {/* LIVE IMPACT COUNTERS */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white p-5 rounded-card border border-sage shadow-soft text-center space-y-1">
-            <span className="text-xs font-bold text-muted uppercase tracking-wider">Food Rescued</span>
-            <div className="text-3xl font-extrabold text-forest">14,280 kg</div>
-            <span className="text-[11px] text-muted">From caterers & banquets</span>
-          </div>
-          <div className="bg-white p-5 rounded-card border border-sage shadow-soft text-center space-y-1">
-            <span className="text-xs font-bold text-muted uppercase tracking-wider">Verified Meals Served</span>
-            <div className="text-3xl font-extrabold text-orange-warm">31,730</div>
-            <span className="text-[11px] text-muted">Confirmed receipt by NGOs</span>
-          </div>
-          <div className="bg-white p-5 rounded-card border border-sage shadow-soft text-center space-y-1">
-            <span className="text-xs font-bold text-muted uppercase tracking-wider">CO2 Emissions Avoided</span>
-            <div className="text-3xl font-extrabold text-forest-kelly">28.5 Tons</div>
-            <span className="text-[11px] text-muted">Environmental offset</span>
-          </div>
-          <div className="bg-white p-5 rounded-card border border-sage shadow-soft text-center space-y-1">
-            <span className="text-xs font-bold text-muted uppercase tracking-wider">Active Rescues</span>
-            <div className="text-3xl font-extrabold text-cherry">4 Active</div>
-            <span className="text-[11px] text-muted">Coimbatore & Salem hubs</span>
-          </div>
-        </div>
-      </section>
-
-      {/* HOW UNAVULINK WORKS */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-        <div className="text-center max-w-2xl mx-auto space-y-2">
-          <span className="text-xs font-extrabold text-forest uppercase tracking-wider">Ecosystem Architecture</span>
-          <h2 className="text-3xl font-extrabold text-charcoal">How UnavuLink Operates</h2>
-          <p className="text-sm text-muted">A closed-loop, safety-first workflow connecting surplus donors to community tables.</p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-white p-6 rounded-card border border-sage shadow-soft space-y-3 relative">
-            <div className="w-10 h-10 rounded-xl bg-forest/10 text-forest flex items-center justify-center font-extrabold text-base">
-              1
-            </div>
-            <h3 className="font-bold text-charcoal text-base">AI Surplus Posting</h3>
-            <p className="text-xs text-muted leading-relaxed">
-              Donors snap food photos. Gemini Vision suggests portion size, ingredients and allergens. Donor reviews and approves the listing.
-            </p>
-          </div>
-
-          <div className="bg-white p-6 rounded-card border border-sage shadow-soft space-y-3 relative">
-            <div className="w-10 h-10 rounded-xl bg-forest/10 text-forest flex items-center justify-center font-extrabold text-base">
-              2
-            </div>
-            <h3 className="font-bold text-charcoal text-base">Safety Eligibility Gate</h3>
-            <p className="text-xs text-muted leading-relaxed">
-              Automatic validation checks preparation timestamp, storage temperature, handling window, and generates the unique QR Food Safety Passport.
-            </p>
-          </div>
-
-          <div className="bg-white p-6 rounded-card border border-sage shadow-soft space-y-3 relative">
-            <div className="w-10 h-10 rounded-xl bg-forest/10 text-forest flex items-center justify-center font-extrabold text-base">
-              3
-            </div>
-            <h3 className="font-bold text-charcoal text-base">FairShare Matching</h3>
-            <p className="text-xs text-muted leading-relaxed">
-              Engine prioritizes recipient suitability based on dietary preferences, capacity, and historical unmet need—not just distance.
-            </p>
-          </div>
-
-          <div className="bg-white p-6 rounded-card border border-sage shadow-soft space-y-3 relative">
-            <div className="w-10 h-10 rounded-xl bg-forest/10 text-forest flex items-center justify-center font-extrabold text-base">
-              4
-            </div>
-            <h3 className="font-bold text-charcoal text-base">Dual OTP Handover</h3>
-            <p className="text-xs text-muted leading-relaxed">
-              Volunteer collects with Pickup OTP. NGO scans QR and confirms delivery with Delivery OTP. Quantity verified at both points.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* REAL TAMIL NADU MAP PREVIEW */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* COMMUNITY FRIDGES CAROUSEL */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
+        <div className="flex items-center justify-between">
           <div>
-            <span className="text-xs font-extrabold text-forest uppercase tracking-wider">Geospatial Intelligence</span>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-charcoal">Interactive Tamil Nadu Food Map</h2>
-            <p className="text-xs text-muted">Explore real-time surplus batches, verified NGOs, community fridges and hotspots.</p>
+            <h3 className="font-extrabold text-base text-charcoal">Community Fridges & Hubs Near You</h3>
+            <p className="text-xs text-muted">24/7 public access points maintained by verified community operators.</p>
           </div>
-          <Link
-            to="/map"
-            className="px-4 py-2 bg-forest text-white rounded-subtle font-bold text-xs hover:bg-forest-dark transition-all self-start sm:self-auto flex items-center gap-1.5"
-          >
-            <span>Open Fullscreen Map</span>
-            <ArrowRight className="w-4 h-4" />
+          <Link to="/map" className="text-xs font-bold text-forest hover:underline">
+            All fridges →
           </Link>
         </div>
 
-        <TamilNaduMap
-          listings={listings}
-          organizations={orgs}
-          hotspots={hotspots}
-          hubs={hubs}
-          height="450px"
-        />
-      </section>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {hubs.map(hub => (
+            <div key={hub.id} className="bg-white p-4 rounded-card border border-sage shadow-soft flex items-start justify-between gap-3 text-xs">
+              <div className="space-y-1">
+                <span className="text-[10px] font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full uppercase">
+                  Community Fridge
+                </span>
+                <h4 className="font-bold text-sm text-charcoal">{hub.name}</h4>
+                <p className="text-muted flex items-center gap-1">
+                  <MapPin className="w-3.5 h-3.5 text-orange-warm" />
+                  <span>{hub.address}, {hub.city}</span>
+                </p>
+                <p className="text-[11px] text-muted">Operating Hours: <strong>{hub.opening_hours}</strong></p>
+              </div>
 
-      {/* STANDOUT INNOVATIONS SHOWCASE */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-        <div className="text-center max-w-2xl mx-auto space-y-2">
-          <span className="text-xs font-extrabold text-orange-warm uppercase tracking-wider">Hackathon Signature Features</span>
-          <h2 className="text-3xl font-extrabold text-charcoal">Built to Prevent Failure Before It Happens</h2>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white p-6 rounded-card border border-sage shadow-soft space-y-3">
-            <div className="w-10 h-10 rounded-xl bg-cherry/10 text-cherry flex items-center justify-center">
-              <RotateCcw className="w-5 h-5" />
+              <div className="text-right shrink-0">
+                <span className="text-lg font-extrabold text-forest block">{hub.current_availability_kg} kg</span>
+                <span className="text-[10px] text-muted">Available Now</span>
+              </div>
             </div>
-            <h3 className="font-bold text-charcoal text-base">Rescue Failure Recovery</h3>
-            <p className="text-xs text-muted leading-relaxed">
-              If an assigned volunteer breaks down or an NGO suddenly overflows, the self-healing recovery engine reassigns the batch immediately within the safe window.
-            </p>
-          </div>
-
-          <div className="bg-white p-6 rounded-card border border-sage shadow-soft space-y-3">
-            <div className="w-10 h-10 rounded-xl bg-forest/10 text-forest flex items-center justify-center">
-              <Cpu className="w-5 h-5" />
-            </div>
-            <h3 className="font-bold text-charcoal text-base">Food Rescue Digital Twin</h3>
-            <p className="text-xs text-muted leading-relaxed">
-              Simulates volunteer cancellations, traffic gridlocks and capacity shocks on Tamil Nadu highway corridors to stress-test logistics before real deployment.
-            </p>
-          </div>
-
-          <div className="bg-white p-6 rounded-card border border-sage shadow-soft space-y-3">
-            <div className="w-10 h-10 rounded-xl bg-orange-warm/10 text-orange-warm flex items-center justify-center">
-              <ShieldCheck className="w-5 h-5" />
-            </div>
-            <h3 className="font-bold text-charcoal text-base">Batch Quarantine & Recall</h3>
-            <p className="text-xs text-muted leading-relaxed">
-              Any reported odor or temperature hazard immediately locks the batch across all recipient views, stopping dispatches and preserving community safety.
-            </p>
-          </div>
+          ))}
         </div>
       </section>
 
-      {/* QR Passport Modal if triggered */}
+      {/* POPUP MODALS */}
+      <FoodDetailsModal
+        listing={selectedFood}
+        onClose={() => setSelectedFood(null)}
+        onRequest={(l) => setRequestingFood(l)}
+        onOpenPassport={(l) => setSelectedPassport(l)}
+      />
+
+      <RequestModal
+        listing={requestingFood}
+        isOpen={Boolean(requestingFood)}
+        onClose={() => setRequestingFood(null)}
+      />
+
       <QRPassportModal
-        listing={selectedPassportListing}
-        onClose={() => setSelectedPassportListing(null)}
+        listing={selectedPassport}
+        onClose={() => setSelectedPassport(null)}
       />
     </div>
   );

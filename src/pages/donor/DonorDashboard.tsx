@@ -1,27 +1,32 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { store } from '../../services/store';
-import { FoodListing, DonationRequest } from '../../types';
+import { useStore } from '../../hooks/useStore';
+import { FoodCard } from '../../components/common/FoodCard';
+import { LiveTrackingView } from '../../components/rescue/LiveTrackingView';
 import { QRPassportModal } from '../../components/qr/QRPassportModal';
 import { ReportIncidentModal } from '../../components/common/ReportIncidentModal';
+import { FoodListing, DonationRequest } from '../../types';
 import { 
   PlusCircle, 
-  Clock, 
   CheckCircle2, 
-  AlertTriangle, 
-  QrCode, 
   Inbox, 
   Navigation, 
   ShieldAlert, 
-  Sparkles,
-  Flame,
+  Sparkles, 
+  Award, 
+  UtensilsCrossed, 
+  Clock,
   ArrowRight
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 export const DonorDashboard: React.FC = () => {
+  const store = useStore();
   const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const [activeTab, setActiveTab] = useState<'listings' | 'requests' | 'tracking'>('listings');
   const [selectedPassportListing, setSelectedPassportListing] = useState<FoodListing | null>(null);
   const [incidentBatchId, setIncidentBatchId] = useState<string | null>(null);
 
@@ -29,219 +34,200 @@ export const DonorDashboard: React.FC = () => {
   const requests = store.getRequests();
   const missions = store.getMissions();
 
-  // Approve a donation request
-  const handleApproveRequest = (req: DonationRequest) => {
-    store.updateRequest({
-      ...req,
-      request_status: 'approved',
-      approved_quantity: req.requested_quantity,
-      donor_response_notes: 'Approved for urgent redistribution.'
-    });
-
+  // Seamless Interconnection: Approve request and spawn active rescue mission
+  const handleApprove = (req: DonationRequest) => {
+    const mission = store.approveRequestAndCreateMission(req);
     confetti({
-      particleCount: 60,
-      spread: 50,
+      particleCount: 70,
+      spread: 60,
       origin: { y: 0.6 }
     });
+    alert(`Request approved! Rescue Mission ${mission.batch_id} created with Pickup OTP: ${mission.pickup_otp}`);
   };
 
   return (
-    <div className="space-y-6">
-      {/* Top Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-card border border-sage shadow-soft">
-        <div>
-          <span className="text-xs font-bold text-forest uppercase tracking-wider">Food Provider Portal</span>
-          <h1 className="text-2xl font-extrabold text-charcoal">{user?.full_name}</h1>
-          <p className="text-xs text-muted">
-            {user?.location} • FSSAI Registered • 180 Rescue Credits Earned
+    <div className="space-y-6 pb-20">
+      {/* Friendly Swiggy-Style Donor Greeting Banner */}
+      <div className="bg-white p-6 sm:p-8 rounded-card border border-sage shadow-soft flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <span className="text-xl">👨‍🍳</span>
+            <span className="text-xs font-bold text-forest uppercase tracking-wider">Food Provider Command</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-charcoal tracking-tight">
+            Hello, {user?.full_name?.split(' ')[0] || 'Chef'}! Ready to rescue some food?
+          </h1>
+          <p className="text-xs text-muted max-w-lg leading-relaxed">
+            Your kitchen in {user?.location || 'Coimbatore'} has diverted surplus to 24 partner shelters, earning <strong>240 Rescue Credits</strong>.
           </p>
         </div>
 
+        {/* Large Primary Action Button */}
         <Link
           to="/donor/donate"
-          className="px-5 py-3 bg-forest hover:bg-forest-dark text-white rounded-subtle font-extrabold text-xs shadow-sm transition-all flex items-center gap-2 self-start sm:self-auto"
+          className="px-6 py-4 bg-forest hover:bg-forest-dark text-white rounded-2xl font-extrabold text-sm shadow-md transition-all flex items-center justify-center gap-2 self-start md:self-auto shrink-0 group"
         >
-          <PlusCircle className="w-4 h-4 text-orange-warm" />
-          <span>Post New Surplus Rescue</span>
+          <PlusCircle className="w-5 h-5 text-orange-warm group-hover:rotate-90 transition-transform" />
+          <span>+ Post New Food Donation</span>
         </Link>
       </div>
 
-      {/* KPI Stats */}
+      {/* Quick Visual Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white p-4 rounded-card border border-sage shadow-soft">
-          <span className="text-xs font-bold text-muted uppercase">Total Listed</span>
-          <div className="text-2xl font-extrabold text-charcoal">{listings.length} Batches</div>
-          <span className="text-[11px] text-muted">Active surplus catalog</span>
+          <span className="text-[10px] font-bold text-muted uppercase">Active Batches</span>
+          <div className="text-2xl font-extrabold text-charcoal">{listings.length} Listed</div>
+          <span className="text-[11px] text-forest font-semibold">Safety Gate Active</span>
         </div>
         <div className="bg-white p-4 rounded-card border border-sage shadow-soft">
-          <span className="text-xs font-bold text-muted uppercase">Rescued Volume</span>
+          <span className="text-[10px] font-bold text-muted uppercase">Pending Requests</span>
+          <div className="text-2xl font-extrabold text-orange-warm">
+            {requests.filter(r => r.request_status === 'pending').length} Awaiting
+          </div>
+          <span className="text-[11px] text-muted">Shelter intake queues</span>
+        </div>
+        <div className="bg-white p-4 rounded-card border border-sage shadow-soft">
+          <span className="text-[10px] font-bold text-muted uppercase">Food Rescued</span>
           <div className="text-2xl font-extrabold text-forest">115 kg</div>
           <span className="text-[11px] text-status-success font-semibold">270 Meals Fed</span>
         </div>
         <div className="bg-white p-4 rounded-card border border-sage shadow-soft">
-          <span className="text-xs font-bold text-muted uppercase">Pending Requests</span>
-          <div className="text-2xl font-extrabold text-orange-warm">{requests.filter(r => r.request_status === 'pending').length}</div>
-          <span className="text-[11px] text-muted">Awaiting your approval</span>
-        </div>
-        <div className="bg-white p-4 rounded-card border border-sage shadow-soft">
-          <span className="text-xs font-bold text-muted uppercase">Rescue Credits</span>
+          <span className="text-[10px] font-bold text-muted uppercase">Rescue Credits</span>
           <div className="text-2xl font-extrabold text-forest-kelly">240 Pts</div>
           <span className="text-[11px] text-muted">CSR ESG Certified</span>
         </div>
       </div>
 
-      {/* Active Listings Grid */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-base font-bold text-charcoal">Active Surplus Listings</h2>
-          <span className="text-xs font-semibold text-muted">Monitored by Safety Gate</span>
-        </div>
+      {/* Tabs */}
+      <div className="flex items-center gap-2 border-b border-sage/60 pb-1">
+        <button
+          onClick={() => setActiveTab('listings')}
+          className={`px-4 py-2 text-xs font-bold rounded-t-lg transition-colors flex items-center gap-2 ${
+            activeTab === 'listings'
+              ? 'bg-white border border-b-0 border-sage text-forest shadow-xs'
+              : 'text-muted hover:text-charcoal'
+          }`}
+        >
+          <UtensilsCrossed className="w-4 h-4" />
+          <span>My Food Listings ({listings.length})</span>
+        </button>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {listings.map(listing => {
-            const isFrozen = listing.safety_status === 'frozen';
-            const isEmergency = listing.is_emergency;
-            return (
-              <div
-                key={listing.id}
-                className={`bg-white rounded-card p-5 border shadow-soft space-y-3 transition-all ${
-                  isFrozen ? 'border-cherry bg-cherry/5' : 'border-sage'
-                }`}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-mono text-xs font-bold text-forest bg-forest/10 px-2 py-0.5 rounded">
-                        {listing.batch_id}
-                      </span>
-                      {isEmergency && (
-                        <span className="text-[10px] font-extrabold bg-cherry text-white px-2 py-0.5 rounded-full flex items-center gap-1">
-                          <Flame className="w-3 h-3" />
-                          <span>Emergency</span>
-                        </span>
-                      )}
-                      {isFrozen && (
-                        <span className="text-[10px] font-extrabold bg-cherry text-white px-2 py-0.5 rounded-full flex items-center gap-1">
-                          <AlertTriangle className="w-3 h-3" />
-                          <span>FROZEN</span>
-                        </span>
-                      )}
-                    </div>
-                    <h3 className="font-bold text-sm text-charcoal">{listing.food_name}</h3>
-                    <p className="text-xs text-muted mt-0.5">{listing.description}</p>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <span className="text-base font-extrabold text-charcoal block">
-                      {listing.quantity} {listing.unit}
-                    </span>
-                    <span className="text-[11px] text-muted">{listing.estimated_portions} portions</span>
-                  </div>
-                </div>
+        <button
+          onClick={() => setActiveTab('requests')}
+          className={`px-4 py-2 text-xs font-bold rounded-t-lg transition-colors flex items-center gap-2 ${
+            activeTab === 'requests'
+              ? 'bg-white border border-b-0 border-sage text-forest shadow-xs'
+              : 'text-muted hover:text-charcoal'
+          }`}
+        >
+          <Inbox className="w-4 h-4 text-orange-warm" />
+          <span>Incoming Requests ({requests.length})</span>
+        </button>
 
-                {/* Safety & Time Status */}
-                <div className="bg-cream p-3 rounded-subtle border border-sage flex flex-wrap items-center justify-between text-xs gap-2">
-                  <div className="flex items-center gap-1.5 text-forest font-semibold">
-                    <Clock className="w-3.5 h-3.5" />
-                    <span>Handling Deadline: {new Date(listing.permitted_handling_deadline).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                  </div>
-                  <div className="flex items-center gap-1 text-charcoal font-medium">
-                    <span>Temp:</span>
-                    <strong className="text-cherry">{listing.temperature_celsius ? `${listing.temperature_celsius}°C` : 'Ambient'}</strong>
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex items-center justify-between pt-1 text-xs">
-                  <button
-                    onClick={() => setSelectedPassportListing(listing)}
-                    className="font-bold text-forest hover:text-forest-dark flex items-center gap-1.5"
-                  >
-                    <QrCode className="w-4 h-4 text-orange-warm" />
-                    <span>Food Safety Passport</span>
-                  </button>
-
-                  <button
-                    onClick={() => setIncidentBatchId(listing.batch_id)}
-                    className="text-cherry hover:text-cherry-coral font-bold flex items-center gap-1"
-                  >
-                    <ShieldAlert className="w-3.5 h-3.5" />
-                    <span>Report Hazard / Recall</span>
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        <button
+          onClick={() => setActiveTab('tracking')}
+          className={`px-4 py-2 text-xs font-bold rounded-t-lg transition-colors flex items-center gap-2 ${
+            activeTab === 'tracking'
+              ? 'bg-white border border-b-0 border-sage text-forest shadow-xs'
+              : 'text-muted hover:text-charcoal'
+          }`}
+        >
+          <Navigation className="w-4 h-4 text-forest" />
+          <span>Live Rescue Tracking ({missions.length})</span>
+        </button>
       </div>
 
-      {/* Donation Requests Management */}
-      <div className="bg-white rounded-card p-6 border border-sage shadow-soft space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Inbox className="w-5 h-5 text-forest" />
-            <h2 className="text-base font-bold text-charcoal">Incoming Requests from Verified Shelters</h2>
+      {/* TAB 1: LISTINGS (Swiggy Food Cards) */}
+      {activeTab === 'listings' && (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {listings.map(listing => (
+              <FoodCard
+                key={listing.id}
+                listing={listing}
+                onPassportClick={(l) => setSelectedPassportListing(l)}
+                onRequestClick={() => setActiveTab('requests')}
+              />
+            ))}
           </div>
-          <span className="text-xs text-muted">FairShare Prioritized</span>
         </div>
+      )}
 
-        <div className="space-y-3">
-          {requests.map(req => {
-            const isApproved = req.request_status === 'approved';
-            return (
-              <div
-                key={req.id}
-                className="p-4 rounded-subtle border border-sage bg-cream/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
-              >
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-bold text-charcoal text-sm">{req.organization_name}</span>
-                    <span className="text-muted">({req.requester_name})</span>
+      {/* TAB 2: INCOMING REQUESTS WITH SEAMLESS MISSION DISPATCH */}
+      {activeTab === 'requests' && (
+        <div className="bg-white rounded-card p-6 border border-sage shadow-soft space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-extrabold text-base text-charcoal">Incoming Requests from Verified Shelters</h3>
+            <span className="text-xs text-muted">FairShare Prioritized</span>
+          </div>
+
+          <div className="space-y-3">
+            {requests.map(req => {
+              const isApproved = req.request_status === 'approved';
+              return (
+                <div
+                  key={req.id}
+                  className="p-4 rounded-subtle border border-sage bg-cream/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs"
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-sm text-charcoal">{req.organization_name}</span>
+                      <span className="text-muted">({req.requester_name})</span>
+                    </div>
+                    <p className="text-muted">
+                      Requested: <strong>{req.requested_quantity} kg</strong> for shelter feeding programs.
+                    </p>
+                    {isApproved && (
+                      <span className="text-status-success font-bold flex items-center gap-1 text-[11px] pt-0.5">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span>Approved • Rescue Mission Generated</span>
+                      </span>
+                    )}
                   </div>
-                  <p className="text-muted">
-                    Requested <strong>{req.requested_quantity} kg</strong> for resident beneficiaries.
-                  </p>
-                  {isApproved && (
-                    <span className="text-status-success font-bold flex items-center gap-1 mt-1">
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      <span>Approved • Rescue Mission Created</span>
-                    </span>
+
+                  {!isApproved ? (
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleApprove(req)}
+                        className="px-4 py-2 bg-forest hover:bg-forest-dark text-white rounded-subtle font-extrabold text-xs shadow-xs transition-all"
+                      >
+                        Approve & Dispatch Volunteer
+                      </button>
+                      <button
+                        onClick={() => store.updateRequest({ ...req, request_status: 'rejected', rejection_reason: 'Allocated to urgent shelter' })}
+                        className="px-3 py-2 border border-sage text-charcoal hover:bg-white rounded-subtle font-semibold"
+                      >
+                        Decline
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="bg-white px-3.5 py-2 rounded-subtle border border-sage text-right">
+                      <span className="text-[10px] text-muted block uppercase font-bold">Pickup Handover OTP:</span>
+                      <span className="font-mono font-extrabold text-base text-forest tracking-widest">582194</span>
+                    </div>
                   )}
                 </div>
-
-                {!isApproved ? (
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleApproveRequest(req)}
-                      className="px-4 py-2 bg-forest hover:bg-forest-dark text-white rounded-subtle font-bold text-xs transition-all shadow-xs"
-                    >
-                      Approve Request
-                    </button>
-                    <button
-                      onClick={() => store.updateRequest({ ...req, request_status: 'rejected', rejection_reason: 'Quantity allocated to earlier request.' })}
-                      className="px-3 py-2 border border-sage text-charcoal hover:bg-white rounded-subtle font-semibold text-xs"
-                    >
-                      Decline
-                    </button>
-                  </div>
-                ) : (
-                  <div className="bg-white px-3 py-1.5 rounded border border-sage text-right">
-                    <span className="text-[10px] text-muted block">Pickup Handover OTP:</span>
-                    <span className="font-mono font-extrabold text-sm text-forest tracking-widest">582194</span>
-                  </div>
-                )}
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* QR Passport Modal */}
+      {/* TAB 3: LIVE TRACKING (Swiggy Delivery Experience) */}
+      {activeTab === 'tracking' && (
+        <div className="space-y-4">
+          {missions.map(m => (
+            <LiveTrackingView key={m.id} mission={m} />
+          ))}
+        </div>
+      )}
+
+      {/* Modals */}
       <QRPassportModal
         listing={selectedPassportListing}
         onClose={() => setSelectedPassportListing(null)}
       />
 
-      {/* Report Incident Modal */}
       <ReportIncidentModal
         isOpen={Boolean(incidentBatchId)}
         batchId={incidentBatchId || ''}
