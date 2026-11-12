@@ -114,6 +114,22 @@ export const RoleLoginPage: React.FC<RoleLoginPageProps> = ({
 
         {/* Credentials Form */}
         <form onSubmit={handleLogin} className="space-y-4">
+          {/* 1-Click Fast Fill Pill */}
+          <div className="flex items-center justify-between text-xs bg-cream p-2.5 rounded-subtle border border-sage">
+            <span className="text-[11px] text-muted font-medium">Use demo credentials:</span>
+            <button
+              type="button"
+              onClick={() => {
+                setEmail(defaultEmail);
+                setPassword(defaultPassword);
+                setError('');
+              }}
+              className="text-[11px] font-extrabold text-forest hover:underline"
+            >
+              Fill & Test Now
+            </button>
+          </div>
+
           <div>
             <label className="block text-xs font-bold text-charcoal mb-1">
               Registered {fixedRole} Email

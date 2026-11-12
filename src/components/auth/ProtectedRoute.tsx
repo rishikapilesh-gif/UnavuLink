@@ -27,6 +27,11 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <>{children}</>;
   }
 
+  // Check role match: Admins have master access to audit, monitor and troubleshoot any dashboard
+  if (role === 'Admin') {
+    return <>{children}</>;
+  }
+
   // Check role match
   if (!allowedRoles.includes(role)) {
     return (
@@ -36,15 +41,27 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         </div>
         <h2 className="text-xl font-extrabold text-charcoal">Access Restricted</h2>
         <p className="text-xs text-muted leading-relaxed">
-          Your current account role is <strong className="text-charcoal">{role}</strong>. 
-          This section is restricted to <strong>{allowedRoles.join(' or ')}</strong> personnel only.
+          You are currently signed in as <strong className="text-charcoal">{user.full_name} ({role})</strong>.
+          This section is restricted to <strong>{allowedRoles.join(' or ')}</strong> accounts.
         </p>
-        <div className="pt-2">
+        <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-2">
           <a
-            href="/"
-            className="px-4 py-2 bg-forest text-white rounded-subtle font-bold text-xs inline-block"
+            href={
+              role === 'Donor' ? '/donor' :
+              role === 'NGO' ? '/ngo' :
+              role === 'Acceptor' ? '/acceptor' :
+              role === 'Common People' && user.is_volunteer ? '/rescuemate' :
+              '/community'
+            }
+            className="px-4 py-2 bg-forest text-white rounded-subtle font-bold text-xs"
           >
-            Return to Allowed Portal
+            Go to Your {role} Dashboard
+          </a>
+          <a
+            href="/login"
+            className="px-4 py-2 border border-sage hover:bg-cream text-charcoal rounded-subtle font-semibold text-xs"
+          >
+            Switch Account
           </a>
         </div>
       </div>
