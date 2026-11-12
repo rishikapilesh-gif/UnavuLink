@@ -20,7 +20,13 @@ import {
   Sparkles,
   HeartHandshake,
   CheckCircle2,
-  Navigation
+  Navigation,
+  Truck,
+  Cpu,
+  Award,
+  Building2,
+  Users,
+  FileText
 } from 'lucide-react';
 
 const CATEGORIES = [
@@ -286,6 +292,153 @@ export const LandingPage: React.FC = () => {
               </div>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* CORE OPERATING PHILOSOPHY: HOW IT WORKS */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+        <div className="text-center max-w-2xl mx-auto space-y-2">
+          <span className="text-[10px] font-extrabold text-forest uppercase tracking-widest bg-forest/10 px-3 py-1 rounded-full">
+            Autonomous Logistics Pipeline
+          </span>
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-charcoal">
+            The 5-Stage UnavuLink Operating Loop
+          </h2>
+          <p className="text-xs text-muted">
+            Predict → Match → Simulate → Recover → Verify. We solve surplus decay before food becomes unsafe.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 text-xs">
+          <div className="bg-white p-4 rounded-card border border-sage shadow-soft space-y-2">
+            <span className="text-sm font-extrabold text-forest">01. PREDICT</span>
+            <h4 className="font-bold text-charcoal">Surplus Forecasts</h4>
+            <p className="text-[11px] text-muted leading-relaxed">
+              Analyzes historical banquet and kitchen logs to estimate surplus volume hours ahead of event wrap.
+            </p>
+          </div>
+
+          <div className="bg-white p-4 rounded-card border border-sage shadow-soft space-y-2">
+            <span className="text-sm font-extrabold text-forest">02. MATCH</span>
+            <h4 className="font-bold text-charcoal">FairShare AI</h4>
+            <p className="text-[11px] text-muted leading-relaxed">
+              Proportional equity allocation across verified shelters based on resident headcount and distance.
+            </p>
+          </div>
+
+          <div className="bg-white p-4 rounded-card border border-sage shadow-soft space-y-2">
+            <span className="text-sm font-extrabold text-forest">03. SIMULATE</span>
+            <h4 className="font-bold text-charcoal">Digital Twin</h4>
+            <p className="text-[11px] text-muted leading-relaxed">
+              Stress-tests rescue corridors against volunteer dropouts, rainstorms, and shelter capacity limits.
+            </p>
+          </div>
+
+          <div className="bg-white p-4 rounded-card border border-sage shadow-soft space-y-2">
+            <span className="text-sm font-extrabold text-forest">04. RECOVER</span>
+            <h4 className="font-bold text-charcoal">Auto-Rerouting</h4>
+            <p className="text-[11px] text-muted leading-relaxed">
+              If volunteer puncture or delay occurs, autonomous recovery reassigns nearby RescueMates in seconds.
+            </p>
+          </div>
+
+          <div className="bg-white p-4 rounded-card border border-sage shadow-soft space-y-2">
+            <span className="text-sm font-extrabold text-forest">05. VERIFY</span>
+            <h4 className="font-bold text-charcoal">Dual-OTP & QR</h4>
+            <p className="text-[11px] text-muted leading-relaxed">
+              Unbroken custody verified by donor pickup OTP and recipient shelter delivery OTP on the Impact Ledger.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* RESCUEMATE: THE HUMAN RESCUE NETWORK */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-gradient-to-r from-forest-dark via-forest to-forest text-white rounded-2xl p-6 sm:p-10 shadow-lift flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-3 max-w-xl">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-green-400 animate-ping" />
+              <span className="text-xs font-bold text-orange-warm uppercase tracking-wider">RescueMate Fleet</span>
+            </div>
+            <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+              Become a RescueMate. Help Good Food Reach the Right People.
+            </h3>
+            <p className="text-xs sm:text-sm text-cream/90 leading-relaxed">
+              RescueMates are verified citizen volunteers equipped with insulated catering bags and two-wheelers. Pick up hot food batches from donor kitchens and deliver them to nearby care homes in your spare time.
+            </p>
+            <div className="flex items-center gap-4 text-xs font-semibold pt-1">
+              <span>✓ Earn Verified Rescue Credits</span>
+              <span>✓ FSSAI Safe Food Training</span>
+              <span>✓ Flexible Local Corridors</span>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2 shrink-0">
+            <Link
+              to="/register"
+              className="px-6 py-3.5 bg-orange-warm hover:bg-orange-warm/90 text-white rounded-subtle font-extrabold text-xs shadow-md transition-all flex items-center justify-center gap-2"
+            >
+              <Truck className="w-4 h-4" />
+              <span>Apply to Join RescueMate Fleet</span>
+            </Link>
+            <Link
+              to="/rescuemate"
+              className="px-6 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-subtle font-bold text-xs text-center border border-white/20 transition-colors"
+            >
+              Open RescueMate Dashboard
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* RESCUETWIN AI & VALUE PROPOSITIONS */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* For Donors */}
+          <div className="bg-white p-6 rounded-card border border-sage shadow-soft space-y-3 text-xs">
+            <div className="flex items-center gap-2 text-forest">
+              <Utensils className="w-5 h-5" />
+              <h3 className="font-extrabold text-sm text-charcoal">For Commercial Food Donors</h3>
+            </div>
+            <p className="text-muted leading-relaxed">
+              Hotels, restaurants, marriage halls, and catering units can divert surplus in under 3 minutes with zero liability.
+            </p>
+            <ul className="space-y-1.5 text-[11px] text-charcoal font-medium">
+              <li className="flex items-center gap-2">✓ <strong>FSSAI Thermal Safety Gate:</strong> Automated temperature logging and hazard warnings.</li>
+              <li className="flex items-center gap-2">✓ <strong>RescueTwin Forecasts:</strong> Pre-alert nearby volunteers before banquet buffets wrap.</li>
+              <li className="flex items-center gap-2">✓ <strong>CSR Impact Certificates:</strong> Official carbon and meal redistribution ledger.</li>
+            </ul>
+            <Link
+              to="/donor/donate"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-forest hover:underline pt-2"
+            >
+              <span>Post surplus donation now</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+
+          {/* For NGOs & Shelters */}
+          <div className="bg-white p-6 rounded-card border border-sage shadow-soft space-y-3 text-xs">
+            <div className="flex items-center gap-2 text-blue-700">
+              <Building2 className="w-5 h-5" />
+              <h3 className="font-extrabold text-sm text-charcoal">For Shelters &amp; Community Kitchens</h3>
+            </div>
+            <p className="text-muted leading-relaxed">
+              Verified charities, children homes, and community fridges receive wholesome meals tailored to their dietary needs.
+            </p>
+            <ul className="space-y-1.5 text-[11px] text-charcoal font-medium">
+              <li className="flex items-center gap-2">✓ <strong>FairShare Proportional Allocation:</strong> Never flooded with excess food or left hungry.</li>
+              <li className="flex items-center gap-2">✓ <strong>Live Courier Tracking:</strong> View real-time OSRM navigation and arrival ETA.</li>
+              <li className="flex items-center gap-2">✓ <strong>Dual-OTP Verification:</strong> Confirm safe handover directly on the Impact Ledger.</li>
+            </ul>
+            <Link
+              to="/rescuetwin"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-forest hover:underline pt-2"
+            >
+              <span>Explore RescueTwin AI Centre</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
         </div>
       </section>
 

@@ -38,6 +38,11 @@ export type MissionStatus =
   | 'reassigned' 
   | 'cancelled';
 
+export type EmailStatus = 'unverified' | 'verified';
+export type AccountStatus = 'active' | 'suspended' | 'disabled';
+export type OrgVerificationStatus = 'pending' | 'approved' | 'rejected' | 'requires_resubmission';
+export type VolunteerServiceStatus = 'pending_approval' | 'approved' | 'rejected' | 'suspended';
+
 export interface UserProfile {
   id: string;
   full_name: string;
@@ -45,7 +50,10 @@ export interface UserProfile {
   phone?: string;
   role: UserRole;
   verification_status: VerificationStatus;
-  account_status: string;
+  email_status: EmailStatus;
+  account_status: AccountStatus;
+  org_verification: OrgVerificationStatus;
+  volunteer_status: VolunteerServiceStatus;
   location?: string;
   city: string;
   state: string;
@@ -54,6 +62,13 @@ export interface UserProfile {
   avatar_url?: string;
   is_volunteer: boolean;
   volunteer_approved: boolean;
+  password_hash?: string;
+  email_verification_token?: string;
+  email_verification_sent_at?: string;
+  password_reset_token?: string;
+  password_reset_expires_at?: string;
+  failed_login_count?: number;
+  locked_until?: string;
   created_at: string;
 }
 

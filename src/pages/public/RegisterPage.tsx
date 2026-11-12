@@ -20,6 +20,7 @@ import {
   Users, 
   CheckCircle2, 
   ArrowRight, 
+  AlertCircle,
   Lock, 
   Sparkles,
   Info,
@@ -84,8 +85,27 @@ export const RegisterPage: React.FC = () => {
   const [emergencyContactPhone, setEmergencyContactPhone] = useState('');
   const [safetyAgreement, setSafetyAgreement] = useState(true);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Verification & Submission status
+  const [submitting, setSubmitting] = useState(false);
+  const [submissionError, setSubmissionError] = useState('');
+  const [verificationSent, setVerificationSent] = useState(false);
+  const [sentToEmail, setSentToEmail] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmissionError('');
+
+    if (!email || !email.includes('@')) {
+      setSubmissionError('Please enter a valid email address.');
+      return;
+    }
+
+    if (!password || password.length < 8) {
+      setSubmissionError('Password must be at least 8 characters long.');
+      return;
+    }
+
+    setSubmitting(true);
 
     // Map Category to base UserRole
     const baseRole: UserRole = 
@@ -95,9 +115,8 @@ export const RegisterPage: React.FC = () => {
 
     const isVolunteerCandidate = selectedCategory === 'RescueMate';
 
-    // 1. Create Base User Profile
-    const userId = `usr-${Date.now()}`;
-    register({
+    // 1. Create Base User Profile through genuine auth register
+    const regResult = await register({
       full_name: fullName,
       email: email,
       phone: mobile,
@@ -106,7 +125,15 @@ export const RegisterPage: React.FC = () => {
       state: 'Tamil Nadu',
       is_volunteer: isVolunteerCandidate,
       volunteer_approved: false // Requires Admin verification!
-    });
+    }, password);
+
+    if (!regResult.success) {
+      setSubmissionError(regResult.message);
+      setSubmitting(false);
+      return;
+    }
+
+    const userId = regResult.userId || `usr-${Date.now()}`;
 
     // 2. Persist Role-Specific Profile into Store
     if (selectedCategory === 'Donor') {
@@ -134,7 +161,6 @@ export const RegisterPage: React.FC = () => {
         created_at: new Date().toISOString()
       };
       store.addDonorProfile(donorProfile);
-      navigate('/donor');
     } else if (selectedCategory === 'Acceptor') {
       const acceptorProfile: AcceptorProfile = {
         id: `acceptor-${Date.now()}`,
@@ -155,7 +181,6 @@ export const RegisterPage: React.FC = () => {
         created_at: new Date().toISOString()
       };
       store.addAcceptorProfile(acceptorProfile);
-      navigate('/acceptor');
     } else if (selectedCategory === 'NGO') {
       const ngoProfile: NGOProfile = {
         id: `ngo-${Date.now()}`,
@@ -182,7 +207,6 @@ export const RegisterPage: React.FC = () => {
         created_at: new Date().toISOString()
       };
       store.addNGOProfile(ngoProfile);
-      navigate('/ngo');
     } else if (selectedCategory === 'RescueMate') {
       const rescueMateProfile: RescueMateProfile = {
         id: `rescuemate-${Date.now()}`,
@@ -210,10 +234,11 @@ export const RegisterPage: React.FC = () => {
         created_at: new Date().toISOString()
       };
       store.addRescueMateApplication(rescueMateProfile);
-      navigate('/community');
-    } else {
-      navigate('/community');
     }
+
+    setSubmitting(false);
+    setSentToEmail(email);
+    setVerificationSent(true);
 
     confetti({
       particleCount: 80,
@@ -221,6 +246,35 @@ export const RegisterPage: React.FC = () => {
       origin: { y: 0.6 }
     });
   };
+
+  if (verificationSent) {
+    return (
+      <div className="max-w-md mx-auto my-14 px-4 text-center">
+        <div className="bg-white rounded-card shadow-lift border border-sage p-8 space-y-5">
+          <div className="w-14 h-14 bg-forest/10 text-forest rounded-2xl mx-auto flex items-center justify-center border border-forest/20">
+            <CheckCircle2 className="w-8 h-8" />
+          </div>
+          <h1 className="text-2xl font-extrabold text-charcoal">Verification Email Sent</h1>
+          <p className="text-xs text-muted leading-relaxed">
+            We have sent a secure verification link to <strong className="text-charcoal">{sentToEmail}</strong>.
+            Please verify your email address to complete registration and sign in.
+          </p>
+          <div className="p-3 bg-cream rounded-subtle border border-sage text-[11px] text-muted text-left space-y-1">
+            <p className="font-bold text-charcoal">Next Steps:</p>
+            <p>1. Open your email inbox and click "Verify Email Address".</p>
+            <p>2. Once verified, return to login using your selected role.</p>
+          </div>
+          <Link
+            to="/login"
+            className="w-full py-3 bg-forest hover:bg-forest-dark text-white rounded-subtle font-bold text-xs shadow-sm transition-all flex items-center justify-center gap-2"
+          >
+            <span>Proceed to Sign In</span>
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto my-10 px-4 space-y-8">
@@ -761,24 +815,40 @@ export const RegisterPage: React.FC = () => {
             </div>
           )}
 
-          {/* SUBMIT BUTTON */}
-          <div className="pt-4 border-t border-sage/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <span className="text-[11px] text-muted">
-              Already have an account?{' '}
-              <Link to="/login" className="text-forest font-bold hover:underline">
-                Sign In
-              </Link>
-            </span>
+          {/* SUBMIT BUTTON & ERROR MESSAGE */}
+          <div className="pt-4 border-t border-sage/60 space-y-3">
+            {submissionError && (
+              <div className="p-3 bg-cherry/10 border border-cherry/30 text-cherry rounded-subtle text-xs flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{submissionError}</span>
+              </div>
+            )}
 
-            <button
-              type="submit"
-              className="px-6 py-3 bg-forest hover:bg-forest-dark text-white rounded-subtle font-extrabold text-xs shadow-md transition-all flex items-center justify-center gap-2"
-            >
-              <span>
-                {selectedCategory === 'RescueMate' ? 'Submit RescueMate Application' : 'Complete Registration'}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <span className="text-[11px] text-muted">
+                Already have an account?{' '}
+                <Link to="/login" className="text-forest font-bold hover:underline">
+                  Sign In
+                </Link>
               </span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
+
+              <button
+                type="submit"
+                disabled={submitting}
+                className="px-6 py-3 bg-forest hover:bg-forest-dark text-white rounded-subtle font-extrabold text-xs shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {submitting ? (
+                  <span>Registering Account & Sending Email...</span>
+                ) : (
+                  <>
+                    <span>
+                      {selectedCategory === 'RescueMate' ? 'Submit RescueMate Application' : 'Complete Registration'}
+                    </span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </form>
       </div>

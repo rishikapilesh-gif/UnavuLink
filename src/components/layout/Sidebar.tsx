@@ -42,6 +42,7 @@ export const Sidebar: React.FC = () => {
           { to: '/admin', label: 'Command Centre', icon: LayoutDashboard },
           { to: '/rescuetwin', label: 'RescueTwin™ AI Core', icon: Cpu, badge: 'AI' },
           { to: '/admin/whatsapp', label: 'WhatsApp Meta API', icon: Sparkles },
+          { to: '/admin/email', label: 'Email Delivery Logs', icon: Inbox, badge: 'Real' },
           { to: '/impact-ledger', label: 'Impact Ledger', icon: FileText },
           { to: '/messages', label: 'Mission Chat', icon: Inbox },
           { to: '/admin/digital-twin', label: 'Crisis Simulator', icon: Navigation },
@@ -159,14 +160,28 @@ export const Sidebar: React.FC = () => {
       </div>
 
       {/* Safety & Help Footer Widget */}
-      <div className="bg-sage/20 border border-sage rounded-subtle p-3 text-xs space-y-1">
-        <p className="font-bold text-charcoal flex items-center gap-1.5">
-          <ShieldAlert className="w-3.5 h-3.5 text-cherry" />
-          <span>Safety Hotline</span>
-        </p>
-        <p className="text-[11px] text-muted leading-tight">
-          Emergency Batch Recall / Incident Desk: <strong>1800-425-UNAVU</strong>
-        </p>
+      <div className="space-y-2">
+        <NavLink
+          to="/settings"
+          className={({ isActive }) =>
+            `flex items-center gap-2 px-3 py-2 rounded-subtle text-xs font-semibold transition-all ${
+              isActive ? 'bg-forest text-white' : 'text-charcoal hover:bg-cream hover:text-forest'
+            }`
+          }
+        >
+          <Users className="w-4 h-4 shrink-0" />
+          <span>Account Settings</span>
+        </NavLink>
+
+        <div className="bg-sage/20 border border-sage rounded-subtle p-3 text-xs space-y-1">
+          <p className="font-bold text-charcoal flex items-center gap-1.5">
+            <ShieldAlert className="w-3.5 h-3.5 text-cherry" />
+            <span>Safety Hotline</span>
+          </p>
+          <p className="text-[11px] text-muted leading-tight">
+            Emergency Batch Recall / Incident Desk: <strong>1800-425-UNAVU</strong>
+          </p>
+        </div>
       </div>
     </aside>
   );

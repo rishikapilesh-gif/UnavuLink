@@ -189,7 +189,14 @@ export const Navbar: React.FC = () => {
         {/* Right Action Buttons */}
         <div className="flex items-center gap-2.5">
           {user ? (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <Link
+                to="/settings"
+                className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-charcoal hover:text-forest transition-colors rounded-subtle hover:bg-cream"
+                title="Account Settings"
+              >
+                <span>{user.full_name.split(' ')[0]}</span>
+              </Link>
               <Link
                 to={getDashboardPath()}
                 className="px-3.5 py-2 bg-forest text-white rounded-subtle font-bold text-xs hover:bg-forest-dark transition-all shadow-xs flex items-center gap-1.5"

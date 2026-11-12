@@ -6,6 +6,11 @@ import { ImpactPage } from '../pages/public/ImpactPage';
 import { AboutPage } from '../pages/public/AboutPage';
 import { LoginPage } from '../pages/public/LoginPage';
 import { RegisterPage } from '../pages/public/RegisterPage';
+import { VerifyEmailPage } from '../pages/public/VerifyEmailPage';
+import { ForgotPasswordPage } from '../pages/public/ForgotPasswordPage';
+import { ResetPasswordPage } from '../pages/public/ResetPasswordPage';
+import { AccountSettingsPage } from '../pages/public/AccountSettingsPage';
+import { EmailIntegrationPage } from '../pages/admin/EmailIntegrationPage';
 import { ScanReportPage } from '../pages/public/ScanReportPage';
 import { TrackingPage } from '../pages/rescue/TrackingPage';
 import { ImpactLedgerPage } from '../pages/public/ImpactLedgerPage';
@@ -53,6 +58,10 @@ export const AppRouter: React.FC = () => {
       <Route path="/about" element={<AboutPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      <Route path="/verify-email" element={<VerifyEmailPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Route path="/settings" element={<DashboardLayout><AccountSettingsPage /></DashboardLayout>} />
       <Route path="/passport/:batchId" element={<ScanReportPage />} />
       <Route path="/scan" element={<ScanReportPage />} />
       <Route path="/messages" element={<DashboardLayout><MessagesPage /></DashboardLayout>} />
@@ -60,6 +69,7 @@ export const AppRouter: React.FC = () => {
       <Route path="/rescuetwin" element={<DashboardLayout><RescueTwinPage /></DashboardLayout>} />
       <Route path="/rescuemate" element={<DashboardLayout><RescueMateDashboard /></DashboardLayout>} />
       <Route path="/admin/whatsapp" element={<DashboardLayout><WhatsAppIntegrationPage /></DashboardLayout>} />
+      <Route path="/admin/email" element={<DashboardLayout><EmailIntegrationPage /></DashboardLayout>} />
       <Route path="/notifications/preferences" element={<DashboardLayout><NotificationPreferencesPage /></DashboardLayout>} />
 
       {/* Admin Routes */}
