@@ -118,12 +118,14 @@ export const Navbar: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
         {/* Brand Logo */}
         <Link to="/" className="flex items-center gap-2.5 shrink-0 group">
-          <div className="w-10 h-10 rounded-xl bg-forest flex items-center justify-center shadow-sm group-hover:bg-forest-dark transition-all">
-            <span className="text-xl">🍲</span>
-          </div>
+          <img 
+            src="/logo/unavulink-icon.svg" 
+            alt="UnavuLink Logo" 
+            className="w-10 h-10 rounded-xl shadow-xs group-hover:scale-105 transition-transform" 
+          />
           <div>
             <div className="flex items-center gap-1.5">
-              <span className="font-extrabold text-xl tracking-tight text-forest-dark">UnavuLink</span>
+              <span className="font-extrabold text-xl tracking-tight text-forest-dark">Unavu<span className="text-forest">Link</span></span>
               <span className="text-[10px] bg-orange-warm/20 text-orange-warm font-extrabold px-1.5 py-0.2 rounded">
                 AI
               </span>

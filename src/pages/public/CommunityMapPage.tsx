@@ -1,22 +1,23 @@
 import React, { useState } from 'react';
 import { TamilNaduMap, TAMIL_NADU_CITIES } from '../../components/maps/TamilNaduMap';
-import { store } from '../../services/store';
+import { useStore } from '../../hooks/useStore';
 import { QRPassportModal } from '../../components/qr/QRPassportModal';
+import { RequestModal } from '../../components/common/RequestModal';
 import { FoodListing } from '../../types';
-import { MapPin, QrCode, Clock, Navigation, Search, Filter } from 'lucide-react';
+import { MapPin, QrCode, Clock, Navigation, Search, Filter, Utensils } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
 
 export const CommunityMapPage: React.FC = () => {
-  const { switchDemoRole } = useAuth();
-  const navigate = useNavigate();
+  const store = useStore();
+  const { user } = useAuth();
 
-  const [selectedCity, setSelectedCity] = useState<string>('Coimbatore');
+  const [selectedCity, setSelectedCity] = useState<string>(store.getSelectedCity());
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPassportListing, setSelectedPassportListing] = useState<FoodListing | null>(null);
+  const [requestingListing, setRequestingListing] = useState<FoodListing | null>(null);
 
   const listings = store.getListings();
-  const orgs = store.getOrganizations ? store.getOrganizations() : [];
+  const orgs = store.getOrganizations();
   const hotspots = store.getHotspots();
   const hubs = store.getHubs();
 
@@ -27,7 +28,7 @@ export const CommunityMapPage: React.FC = () => {
   );
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 pb-20">
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -49,7 +50,10 @@ export const CommunityMapPage: React.FC = () => {
           </span>
           <select
             value={selectedCity}
-            onChange={(e) => setSelectedCity(e.target.value)}
+            onChange={(e) => {
+              setSelectedCity(e.target.value);
+              store.setSelectedCity(e.target.value);
+            }}
             className="text-xs font-bold bg-white border border-sage rounded-subtle px-3 py-2 text-charcoal shadow-xs focus:outline-none focus:ring-2 focus:ring-forest"
           >
             {Object.keys(TAMIL_NADU_CITIES).map(city => (
@@ -139,13 +143,11 @@ export const CommunityMapPage: React.FC = () => {
 
                     <div className="pt-1">
                       <button
-                        onClick={() => {
-                          switchDemoRole('Acceptor');
-                          navigate('/acceptor/available');
-                        }}
-                        className="w-full py-1.5 bg-forest hover:bg-forest-dark text-white rounded-subtle text-xs font-semibold transition-all text-center"
+                        onClick={() => setRequestingListing(listing)}
+                        className="w-full py-1.5 bg-forest hover:bg-forest-dark text-white rounded-subtle text-xs font-semibold transition-all text-center flex items-center justify-center gap-1.5 shadow-2xs"
                       >
-                        Request This Batch (Acceptor Portal)
+                        <Utensils className="w-3.5 h-3.5" />
+                        <span>Request Food Allocation</span>
                       </button>
                     </div>
                   </div>
@@ -156,10 +158,17 @@ export const CommunityMapPage: React.FC = () => {
         </div>
       </div>
 
-      {/* QR Modal */}
+      {/* QR Passport Inspection Modal */}
       <QRPassportModal
         listing={selectedPassportListing}
         onClose={() => setSelectedPassportListing(null)}
+      />
+
+      {/* Direct Request Modal */}
+      <RequestModal
+        listing={requestingListing}
+        isOpen={Boolean(requestingListing)}
+        onClose={() => setRequestingListing(null)}
       />
     </div>
   );

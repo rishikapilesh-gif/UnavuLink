@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 80" fill="none">
+  <defs>
+    <linearGradient id="unavuGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2E6B3F"/>
+      <stop offset="100%" stop-color="#1E482A"/>
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F28C28"/>
+      <stop offset="100%" stop-color="#FF9D23"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Logo Mark -->
+  <g transform="translate(10, 10)">
+    <!-- Base Food Bowl (Nourishment) -->
+    <path d="M6 32 C6 50, 54 50, 54 32 Z" fill="url(#unavuGrad)"/>
+    <!-- Sustainable Leaf Arc (Rescue & Ecology) -->
+    <path d="M14 26 C14 12, 30 8, 38 18 C30 20, 22 28, 14 26 Z" fill="#5B7E3C"/>
+    <!-- Connection Link Node (Redistribution & Logistics) -->
+    <path d="M26 18 C26 10, 46 10, 46 22 C46 30, 36 34, 30 40" stroke="url(#accentGrad)" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="30" cy="40" r="4.5" fill="url(#accentGrad)"/>
+    <!-- Steam / Warmth Dots -->
+    <circle cx="22" cy="14" r="2.5" fill="#5B7E3C"/>
+    <circle cx="38" cy="8" r="3" fill="url(#accentGrad)"/>
+  </g>
+
+  <!-- Typography: UnavuLink -->
+  <text x="82" y="44" font-family="'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" font-size="28" font-weight="800" fill="#26332B" letter-spacing="-0.5">
+    Unavu<tspan fill="#2E6B3F">Link</tspan>
+  </text>
+  
+  <!-- AI Smart Node Badge -->
+  <rect x="226" y="24" width="32" height="18" rx="5" fill="#F28C28" fill-opacity="0.15"/>
+  <text x="242" y="37" font-family="'Inter', sans-serif" font-size="10" font-weight="800" fill="#F28C28" text-anchor="middle">AI</text>
+
+  <!-- Subtitle Tagline -->
+  <text x="83" y="60" font-family="'Inter', sans-serif" font-size="9" font-weight="600" fill="#68736C" letter-spacing="0.3">
+    PREDICTING SURPLUS • PRIORITISING NEED • DELIVERING SAFELY
+  </text>
+</svg>

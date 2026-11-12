@@ -6,6 +6,7 @@ import { ImpactPage } from '../pages/public/ImpactPage';
 import { AboutPage } from '../pages/public/AboutPage';
 import { LoginPage } from '../pages/public/LoginPage';
 import { RegisterPage } from '../pages/public/RegisterPage';
+import { ScanReportPage } from '../pages/public/ScanReportPage';
 
 // Role Dashboards
 import { AdminCommandCentre } from '../pages/admin/AdminCommandCentre';
@@ -42,6 +43,8 @@ export const AppRouter: React.FC = () => {
       <Route path="/about" element={<AboutPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      <Route path="/passport/:batchId" element={<ScanReportPage />} />
+      <Route path="/scan" element={<ScanReportPage />} />
 
       {/* Admin Routes */}
       <Route path="/admin" element={<DashboardLayout><AdminCommandCentre /></DashboardLayout>} />

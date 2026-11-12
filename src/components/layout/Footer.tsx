@@ -9,9 +9,9 @@ export const Footer: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand Info */}
           <div className="space-y-3 md:col-span-1">
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">🍲</span>
-              <span className="font-extrabold text-lg text-white">UnavuLink</span>
+            <div className="flex items-center gap-2.5">
+              <img src="/logo/unavulink-icon.svg" alt="UnavuLink" className="w-9 h-9 rounded-xl" />
+              <span className="font-extrabold text-lg text-white">Unavu<span className="text-forest-light">Link</span></span>
             </div>
             <p className="text-sage text-xs leading-relaxed">
               Predicting Surplus. Prioritising Need. Delivering Food Safely. Built for Tamil Nadu communities.

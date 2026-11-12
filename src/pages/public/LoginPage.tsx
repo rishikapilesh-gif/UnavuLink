@@ -38,9 +38,11 @@ export const LoginPage: React.FC = () => {
     <div className="max-w-md mx-auto my-12 px-4">
       <div className="bg-white rounded-card shadow-lift border border-sage p-6 sm:p-8 space-y-6">
         <div className="text-center space-y-2">
-          <div className="w-12 h-12 bg-forest/10 text-forest rounded-2xl flex items-center justify-center mx-auto text-2xl shadow-xs">
-            🍲
-          </div>
+          <img 
+            src="/logo/unavulink-icon.svg" 
+            alt="UnavuLink Icon" 
+            className="w-14 h-14 rounded-2xl mx-auto shadow-sm"
+          />
           <h1 className="text-2xl font-extrabold text-charcoal">Sign In to UnavuLink</h1>
           <p className="text-xs text-muted">
             Predicting Surplus. Prioritising Need. Delivering Food Safely.
