@@ -13,10 +13,11 @@ import {
   Globe, 
   LogOut, 
   Search, 
-  Sparkles,
-  Flame,
-  Truck,
-  Bell
+  Sparkles, 
+  Flame, 
+  Truck, 
+  Bell,
+  Download
 } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
@@ -94,8 +95,19 @@ export const Navbar: React.FC = () => {
           })}
         </div>
 
-        {/* Right: City Location & Language */}
+        {/* Right: City Location & Language & Download */}
         <div className="flex items-center gap-2 ml-auto">
+          {/* Direct ZIP Download Button */}
+          <a
+            href="/unavulink-complete-project.zip"
+            download="unavulink-complete-project.zip"
+            className="flex items-center gap-1.5 bg-orange-warm hover:bg-orange-warm/90 text-white px-2.5 py-0.5 rounded-full text-xs font-bold transition-all shadow-2xs"
+            title="Download complete project source ZIP"
+          >
+            <Download className="w-3 h-3" />
+            <span className="hidden sm:inline">Download ZIP</span>
+          </a>
+
           <button
             onClick={() => setLocationModalOpen(true)}
             className="flex items-center gap-1 bg-white/10 hover:bg-white/20 text-white px-2 py-0.5 rounded-full text-xs font-semibold"
