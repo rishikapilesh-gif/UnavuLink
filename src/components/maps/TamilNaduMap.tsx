@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { FoodListing, Organization, CommunityHotspot, CommunityHub } from '../../types';
+import { useStore } from '../../hooks/useStore';
 
 // Fix Leaflet's default icon paths in bundlers
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -80,12 +81,16 @@ export const TamilNaduMap: React.FC<TamilNaduMapProps> = ({
   organizations = [],
   hotspots = [],
   hubs = [],
-  center = [11.0168, 76.9558], // Coimbatore default
+  center,
   zoom = 12,
   height = '500px',
   onLocationSelect,
-  selectedCity = 'Coimbatore'
+  selectedCity
 }) => {
+  const store = useStore();
+  const storeCity = store.getSelectedCity();
+  const effectiveCity = selectedCity || storeCity || 'Coimbatore';
+
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const layerGroupRef = useRef<L.LayerGroup | null>(null);
@@ -97,8 +102,10 @@ export const TamilNaduMap: React.FC<TamilNaduMapProps> = ({
     if (!mapContainerRef.current) return;
     if (mapInstanceRef.current) return;
 
+    const initialCoords = center || (TAMIL_NADU_CITIES[effectiveCity] ? TAMIL_NADU_CITIES[effectiveCity] : [11.0168, 76.9558]);
+
     const map = L.map(mapContainerRef.current, {
-      center: center,
+      center: initialCoords,
       zoom: zoom,
       scrollWheelZoom: true
     });
@@ -126,13 +133,13 @@ export const TamilNaduMap: React.FC<TamilNaduMapProps> = ({
     };
   }, []);
 
-  // Update map view on city filter change
+  // Dynamically pan & fly map view whenever website location or city filter changes
   useEffect(() => {
-    if (mapInstanceRef.current && TAMIL_NADU_CITIES[selectedCity]) {
-      const cityCoords = TAMIL_NADU_CITIES[selectedCity];
+    if (mapInstanceRef.current && TAMIL_NADU_CITIES[effectiveCity]) {
+      const cityCoords = TAMIL_NADU_CITIES[effectiveCity];
       mapInstanceRef.current.flyTo(cityCoords, 12, { duration: 1.2 });
     }
-  }, [selectedCity]);
+  }, [effectiveCity, storeCity, selectedCity]);
 
   // Render Markers based on Active Filter
   useEffect(() => {

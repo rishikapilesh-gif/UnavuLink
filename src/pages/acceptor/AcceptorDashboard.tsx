@@ -14,8 +14,15 @@ import {
   CheckCircle2, 
   Clock, 
   MapPin, 
-  Award 
+  Award,
+  Bell,
+  MessageSquare,
+  Send,
+  Zap,
+  ExternalLink,
+  Sparkles
 } from 'lucide-react';
+import confetti from 'canvas-confetti';
 
 export const AcceptorDashboard: React.FC = () => {
   const store = useStore();
@@ -26,9 +33,24 @@ export const AcceptorDashboard: React.FC = () => {
   const [requestingListing, setRequestingListing] = useState<FoodListing | null>(null);
   const [selectedPassport, setSelectedPassport] = useState<FoodListing | null>(null);
 
+  // WhatsApp Alert State
+  const [whatsAppPhone, setWhatsAppPhone] = useState('+91 98422 10001');
+  const [whatsAppNotice, setWhatsAppNotice] = useState<{ text: string; waUrl: string } | null>(null);
+
   const listings = store.getListings().filter(l => l.safety_status === 'eligible');
   const requests = store.getRequests();
   const missions = store.getMissions();
+  const notifications = store.getNotifications('acceptor');
+  const latestSurplus = listings[0];
+
+  const handleSendWhatsAppNotice = (targetListing?: FoodListing) => {
+    const res = store.sendWhatsAppSurplusAlert(whatsAppPhone, targetListing || latestSurplus);
+    setWhatsAppNotice({ text: res.message, waUrl: res.waUrl });
+    confetti({ particleCount: 60, spread: 55, origin: { y: 0.6 } });
+    setTimeout(() => {
+      setWhatsAppNotice(null);
+    }, 8000);
+  };
 
   return (
     <div className="space-y-6 pb-20">
@@ -45,11 +67,102 @@ export const AcceptorDashboard: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-xs font-extrabold text-forest bg-forest/10 px-3.5 py-1.5 rounded-full">
-            {listings.length} Eligible Batches Online
+          <span className="flex items-center gap-1.5 text-xs font-extrabold text-forest bg-forest/10 px-3.5 py-1.5 rounded-full border border-forest/20">
+            <span className="w-2 h-2 rounded-full bg-green-500 animate-ping" />
+            <span>LiveSync Active</span>
+          </span>
+          <span className="text-xs font-extrabold text-charcoal bg-cream px-3.5 py-1.5 rounded-full border border-sage">
+            {listings.length} Eligible Batches
           </span>
         </div>
       </div>
+
+      {/* REAL-TIME LIVE INTIMATION BANNER FOR ACCEPTORS */}
+      {latestSurplus && (
+        <div className="p-4 bg-gradient-to-r from-forest/15 via-cream to-orange-warm/15 border-2 border-forest/40 rounded-card shadow-soft space-y-2 animate-in fade-in">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <span className="p-2 rounded-full bg-orange-warm text-white animate-bounce shrink-0">
+                <Bell className="w-4 h-4" />
+              </span>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-orange-warm text-white">
+                    Live Real-Time Surplus Intimation
+                  </span>
+                  <span className="text-[11px] text-forest font-bold">Just Intimated from Donor Kitchen!</span>
+                </div>
+                <h3 className="text-sm font-extrabold text-charcoal mt-0.5">
+                  🍲 {latestSurplus.food_name} — <span className="text-orange-warm">{latestSurplus.estimated_portions} Meals ({latestSurplus.quantity} {latestSurplus.unit})</span>
+                </h3>
+                <p className="text-xs text-muted">
+                  Posted by <strong>{latestSurplus.donor_name || 'Donor'}</strong> at <strong>{latestSurplus.pickup_location}</strong> • Ready for immediate intake.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => setRequestingListing(latestSurplus)}
+                className="px-4 py-2 bg-forest hover:bg-forest-dark text-white rounded-subtle font-extrabold text-xs shadow-xs transition-all flex items-center gap-1.5"
+              >
+                <span>Request Allocation</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* WHATSAPP SURPLUS INTIMATION DISPATCHER BAR */}
+      <div className="p-4 bg-white rounded-card border border-sage shadow-soft flex flex-col md:flex-row md:items-center justify-between gap-4 text-xs">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-full bg-[#25D366]/10 text-[#25D366] flex items-center justify-center shrink-0">
+            <MessageSquare className="w-4 h-4" />
+          </div>
+          <div>
+            <h4 className="font-extrabold text-charcoal">WhatsApp Surplus Intimation to Acceptors</h4>
+            <p className="text-[11px] text-muted">
+              Enter any WhatsApp number to send the real-time alert: <em>"📢 here the food is surplus!"</em>
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 flex-wrap">
+          <input
+            type="text"
+            placeholder="+91 98422 10001"
+            value={whatsAppPhone}
+            onChange={(e) => setWhatsAppPhone(e.target.value)}
+            className="p-2 border border-sage rounded font-bold text-charcoal text-xs w-40 bg-cream/40"
+          />
+          <button
+            onClick={() => handleSendWhatsAppNotice()}
+            className="px-4 py-2 bg-[#25D366] hover:bg-[#128C7E] text-white rounded font-extrabold text-xs flex items-center gap-1.5 shadow-xs transition-all"
+          >
+            <Send className="w-3.5 h-3.5" />
+            <span>Send "Here is Surplus" Alert</span>
+          </button>
+        </div>
+      </div>
+
+      {/* WHATSAPP DISPATCH TOAST NOTIFICATION */}
+      {whatsAppNotice && (
+        <div className="p-4 bg-green-50 border border-green-300 text-green-900 rounded-card flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs font-semibold animate-in fade-in">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0" />
+            <span>{whatsAppNotice.text}</span>
+          </div>
+          <a
+            href={whatsAppNotice.waUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-3 py-1.5 bg-[#25D366] text-white rounded font-bold text-xs flex items-center gap-1.5 hover:bg-[#128C7E] shrink-0"
+          >
+            <span>Open in WhatsApp (Direct Send)</span>
+            <ExternalLink className="w-3.5 h-3.5" />
+          </a>
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex items-center gap-2 border-b border-sage/60 pb-1">

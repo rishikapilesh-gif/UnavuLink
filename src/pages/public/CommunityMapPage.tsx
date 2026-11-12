@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { TamilNaduMap, TAMIL_NADU_CITIES } from '../../components/maps/TamilNaduMap';
 import { useStore } from '../../hooks/useStore';
 import { QRPassportModal } from '../../components/qr/QRPassportModal';
@@ -15,6 +15,11 @@ export const CommunityMapPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPassportListing, setSelectedPassportListing] = useState<FoodListing | null>(null);
   const [requestingListing, setRequestingListing] = useState<FoodListing | null>(null);
+
+  // Sync with global website location changes
+  useEffect(() => {
+    setSelectedCity(store.getSelectedCity());
+  }, [store.getSelectedCity()]);
 
   const listings = store.getListings();
   const orgs = store.getOrganizations();

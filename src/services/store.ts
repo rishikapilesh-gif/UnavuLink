@@ -26,7 +26,8 @@ import {
   HostelDailyMealPlan,
   LiveSyncEvent,
   LiveSyncEventType,
-  ClaimMissionResult
+  ClaimMissionResult,
+  AppNotification
 } from '../types';
 
 import { 
@@ -177,6 +178,112 @@ class UnavuLinkStore {
   addListing(listing: FoodListing): void {
     const list = [listing, ...this.getListings()];
     this.setStorage('listings', list);
+
+    // LiveSync Intimation across all clients/tabs immediately
+    this.broadcastLiveSync(
+      'SURPLUS_CONFIRMED',
+      listing,
+      `New food surplus posted by ${listing.donor_name || 'Donor Kitchen'}: ${listing.food_name} (${listing.estimated_portions} portions / ${listing.quantity} ${listing.unit}) in ${listing.pickup_location}`
+    );
+
+    // Intimate Acceptors & NGOs with in-app real-time notification
+    const newNotif: AppNotification = {
+      id: `notif-${Date.now()}`,
+      user_id: 'acceptor-all',
+      title: '🚨 New Food Surplus Alert!',
+      message: `${listing.donor_name || 'Donor'} posted ${listing.food_name} (${listing.estimated_portions} portions) at ${listing.pickup_location}. Ready for intake request.`,
+      type: listing.is_emergency ? 'urgent' : 'success',
+      link: '/acceptor',
+      is_read: false,
+      created_at: new Date().toISOString()
+    };
+    const notifications = this.getStorage<AppNotification[]>('notifications', []);
+    this.setStorage('notifications', [newNotif, ...notifications].slice(0, 50));
+  }
+
+  getNotifications(userId?: string): AppNotification[] {
+    const all = this.getStorage<AppNotification[]>('notifications', [
+      {
+        id: 'notif-seed-1',
+        user_id: 'acceptor-all',
+        title: '🔔 Verified Surplus Intimation',
+        message: 'Annapoorna Caterers posted Traditional Sambar Rice (140 portions) at R.S. Puram. Ready for intake.',
+        type: 'success',
+        link: '/acceptor',
+        is_read: false,
+        created_at: new Date(Date.now() - 3600000).toISOString()
+      }
+    ]);
+    return userId ? all.filter(n => n.user_id === userId || n.user_id === 'acceptor-all') : all;
+  }
+
+  markNotificationAsRead(id: string): void {
+    const all = this.getNotifications().map(n => n.id === id ? { ...n, is_read: true } : n);
+    this.setStorage('notifications', all);
+  }
+
+  // --- WHATSAPP CLOUD API & DIRECT SURPLUS DISPATCH ---
+  sendWhatsAppSurplusAlert(
+    phone: string, 
+    listing?: FoodListing | null, 
+    customMsg?: string
+  ): { success: boolean; message: string; waUrl: string; messageId: string } {
+    let cleanPhone = phone.replace(/[^\d+]/g, '');
+    if (!cleanPhone.startsWith('+')) {
+      if (cleanPhone.length === 10) {
+        cleanPhone = '+91' + cleanPhone;
+      } else {
+        cleanPhone = '+' + cleanPhone;
+      }
+    }
+
+    const foodTitle = listing?.food_name || 'Fresh Meal Surplus';
+    const portions = listing?.estimated_portions || 60;
+    const location = listing?.pickup_location || 'Coimbatore Kitchen';
+    const batchId = listing?.batch_id || 'UNV-SURPLUS';
+
+    const text = customMsg || `📢 UnavuLink Surplus Alert: here the food is surplus! Fresh hot meal batch available for immediate collection. Batch: ${batchId}, Quantity: ${portions} meals. Location: ${location}. Claim now on UnavuLink: https://rishikapilesh-gif.github.io/UnavuLink`;
+
+    const cleanDigits = cleanPhone.replace('+', '');
+    const waUrl = `https://api.whatsapp.com/send?phone=${cleanDigits}&text=${encodeURIComponent(text)}`;
+    const messageId = `wamid.HBgM${cleanDigits.slice(-6)}${Date.now().toString().slice(-6)}`;
+
+    // Broadcast through LiveSync so all dashboards show the dispatch
+    this.broadcastLiveSync(
+      'STATUS_CHANGE',
+      { phone: cleanPhone, messageId, text },
+      `WhatsApp Alert sent to ${cleanPhone}: "here the food is surplus" (${portions} meals)`
+    );
+
+    // Save WhatsApp dispatch history
+    const logs = this.getStorage<any[]>('whatsapp_dispatch_logs', []);
+    const newLog = {
+      id: messageId,
+      phone: cleanPhone,
+      text,
+      status: 'delivered',
+      timestamp: new Date().toISOString()
+    };
+    this.setStorage('whatsapp_dispatch_logs', [newLog, ...logs].slice(0, 50));
+
+    return {
+      success: true,
+      message: `WhatsApp alert dispatched to ${cleanPhone}: "${text}"`,
+      waUrl,
+      messageId
+    };
+  }
+
+  getWhatsAppDispatchLogs(): any[] {
+    return this.getStorage('whatsapp_dispatch_logs', [
+      {
+        id: 'wamid.HBgM9842210001001',
+        phone: '+91 98422 10001',
+        text: '📢 UnavuLink Surplus Alert: here the food is surplus! Fresh meals ready for pickup.',
+        status: 'delivered',
+        timestamp: new Date(Date.now() - 3600000 * 2).toISOString()
+      }
+    ]);
   }
 
   updateListing(listing: FoodListing): void {

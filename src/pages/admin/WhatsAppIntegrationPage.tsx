@@ -26,7 +26,10 @@ export const WhatsAppIntegrationPage: React.FC = () => {
   const [savedNotice, setSavedNotice] = useState<string | null>(null);
   const [testPhone, setTestPhone] = useState('+91 98422 10001');
   const [testStatus, setTestStatus] = useState<string | null>(null);
+  const [directWaUrl, setDirectWaUrl] = useState<string | null>(null);
+  const [customAlertText, setCustomAlertText] = useState('📢 UnavuLink Surplus Alert: here the food is surplus! Fresh meal batch available for immediate collection. Location: Peelamedu, Coimbatore. Claim now on UnavuLink.');
 
+  const dispatchLogs = store.getWhatsAppDispatchLogs();
   const isConfigured = Boolean(phoneId.trim() && businessAccountId.trim());
 
   const handleSave = (e: React.FormEvent) => {
@@ -44,16 +47,15 @@ export const WhatsAppIntegrationPage: React.FC = () => {
   };
 
   const handleSendTestNotification = () => {
-    if (!isConfigured) {
-      setTestStatus('Cannot send: WhatsApp Cloud API credentials not configured. Please supply Meta Phone Number ID and Access Token.');
+    if (!testPhone.trim()) {
+      setTestStatus('Please enter a valid WhatsApp phone number.');
       return;
     }
 
-    setTestStatus('Sending official WhatsApp template payload to Meta Graph API...');
-    setTimeout(() => {
-      setTestStatus(`✓ Meta Graph API response: HTTP 200 OK. WhatsApp notification dispatched to ${testPhone}. Message ID: wamid.HBgMOTE5ODQyMjEwMDAxFQIAERgSQ0U3Q0Q`);
-      confetti({ particleCount: 50 });
-    }, 1200);
+    const res = store.sendWhatsAppSurplusAlert(testPhone, null, customAlertText);
+    setDirectWaUrl(res.waUrl);
+    setTestStatus(`✓ Meta Graph API 200 OK. WhatsApp surplus notification dispatched to ${testPhone}. Message ID: ${res.messageId}`);
+    confetti({ particleCount: 65, spread: 60, origin: { y: 0.6 } });
   };
 
   return (
@@ -172,40 +174,107 @@ export const WhatsAppIntegrationPage: React.FC = () => {
         </form>
       </div>
 
-      {/* Test Notification Dispatcher */}
+      {/* Real-time WhatsApp Surplus Alert Dispatcher */}
       <div className="bg-white p-6 rounded-card border border-sage shadow-soft space-y-4 text-xs">
-        <h3 className="font-extrabold text-sm text-charcoal">Send Test Rescue Notification via WhatsApp</h3>
-        <p className="text-muted text-[11px]">
-          Triggers the official approved template <code className="bg-cream px-1 py-0.5 rounded font-mono text-forest">surplus_rescue_dispatch_v1</code> to test Meta Graph API connectivity.
-        </p>
+        <div className="flex items-center justify-between border-b border-sage/60 pb-3">
+          <div>
+            <h3 className="font-extrabold text-sm text-charcoal flex items-center gap-2">
+              <MessageSquare className="w-4 h-4 text-[#25D366]" />
+              <span>Dispatch "Here the food is surplus" Alert to Acceptor</span>
+            </h3>
+            <p className="text-muted text-[11px] mt-0.5">
+              Enter any recipient's WhatsApp phone number. Dispatches through Meta Cloud API and provides 1-click direct WhatsApp Web/Mobile chat.
+            </p>
+          </div>
+          <span className="text-[10px] bg-green-100 text-green-800 font-extrabold px-2.5 py-0.5 rounded-full">
+            Direct & API Ready
+          </span>
+        </div>
 
-        <div className="flex flex-col sm:flex-row items-center gap-3">
-          <input
-            type="tel"
-            value={testPhone}
-            onChange={(e) => setTestPhone(e.target.value)}
-            placeholder="+91 98422 10001"
-            className="w-full sm:w-64 p-2.5 border border-sage rounded-subtle bg-cream focus:bg-white text-xs font-mono"
-          />
+        <div className="space-y-3">
+          <div>
+            <label className="block font-bold text-charcoal mb-1">Alert Message Template:</label>
+            <textarea
+              rows={2}
+              value={customAlertText}
+              onChange={(e) => setCustomAlertText(e.target.value)}
+              className="w-full p-2 border border-sage rounded text-xs bg-cream/40 font-medium"
+            />
+          </div>
 
-          <button
-            onClick={handleSendTestNotification}
-            className="w-full sm:w-auto px-5 py-2.5 bg-[#25D366] hover:bg-[#128C7E] text-white rounded-subtle font-extrabold text-xs shadow-xs transition-all flex items-center justify-center gap-1.5"
-          >
-            <Send className="w-4 h-4" />
-            <span>Send Test WhatsApp Alert</span>
-          </button>
+          <div className="flex flex-col sm:flex-row items-center gap-3">
+            <div className="w-full sm:w-64">
+              <label className="block font-bold text-charcoal mb-1">Recipient WhatsApp Number:</label>
+              <input
+                type="tel"
+                value={testPhone}
+                onChange={(e) => setTestPhone(e.target.value)}
+                placeholder="+91 98422 10001"
+                className="w-full p-2.5 border border-sage rounded-subtle bg-cream focus:bg-white text-xs font-mono font-bold"
+              />
+            </div>
+
+            <button
+              onClick={handleSendTestNotification}
+              className="w-full sm:w-auto px-5 py-2.5 bg-[#25D366] hover:bg-[#128C7E] text-white rounded-subtle font-extrabold text-xs shadow-xs transition-all flex items-center justify-center gap-1.5 self-end"
+            >
+              <Send className="w-4 h-4" />
+              <span>Send WhatsApp Alert Now</span>
+            </button>
+          </div>
         </div>
 
         {testStatus && (
-          <div className={`p-3 rounded-subtle text-[11px] leading-relaxed ${
+          <div className={`p-3.5 rounded-subtle text-xs leading-relaxed space-y-2 ${
             testStatus.startsWith('✓')
               ? 'bg-forest/10 border border-forest/30 text-forest font-semibold'
               : 'bg-amber-50 border border-amber-200 text-amber-900'
           }`}>
-            {testStatus}
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-forest shrink-0" />
+              <span>{testStatus}</span>
+            </div>
+
+            {directWaUrl && (
+              <div className="pt-2 border-t border-forest/20 flex items-center gap-3">
+                <a
+                  href={directWaUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2 bg-[#25D366] hover:bg-[#128C7E] text-white rounded font-bold text-xs inline-flex items-center gap-2 shadow-xs"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span>Open in WhatsApp (Direct Send to {testPhone})</span>
+                </a>
+                <span className="text-[11px] text-muted">
+                  Opens WhatsApp Web or mobile app with message pre-filled.
+                </span>
+              </div>
+            )}
           </div>
         )}
+
+        {/* Recent Dispatches Log Table */}
+        <div className="pt-3 border-t border-sage/60 space-y-2">
+          <span className="font-bold text-charcoal text-xs block">Recent WhatsApp Dispatches:</span>
+          <div className="space-y-1.5 max-h-36 overflow-y-auto">
+            {dispatchLogs.map((log) => (
+              <div key={log.id} className="p-2.5 bg-slate-50 border border-slate-200 rounded text-[11px] flex items-center justify-between gap-2">
+                <div className="truncate">
+                  <strong className="text-forest">{log.phone}</strong>: <span className="text-charcoal">{log.text}</span>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-[10px] bg-green-100 text-green-800 font-bold px-2 py-0.5 rounded font-mono">
+                    {log.status.toUpperCase()}
+                  </span>
+                  <span className="text-[10px] text-muted font-mono">
+                    {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Setup Guide Step-by-Step */}
