@@ -1,0 +1,41 @@
+@import 'leaflet/dist/leaflet.css';
+@import "tailwindcss";
+@config "../tailwind.config.js";
+
+@layer base {
+  body {
+    background-color: #F6F3EB;
+    color: #26332B;
+    font-family: 'Inter', 'Plus Jakarta Sans', system-ui, sans-serif;
+    min-height: 100vh;
+  }
+}
+
+/* Custom styling for Leaflet popups and markers */
+.leaflet-popup-content-wrapper {
+  border-radius: 14px;
+  box-shadow: 0 10px 25px -5px rgba(38, 51, 43, 0.15);
+  padding: 4px;
+  border: 1px solid #DCE5DC;
+}
+
+.leaflet-popup-content {
+  margin: 12px 14px;
+  line-height: 1.5;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F6F3EB;
+}
+::-webkit-scrollbar-thumb {
+  background: #DCE5DC;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #68736C;
+}
