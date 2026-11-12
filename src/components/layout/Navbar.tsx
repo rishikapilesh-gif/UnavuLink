@@ -161,23 +161,28 @@ export const Navbar: React.FC = () => {
         </Link>
 
         {/* Desktop Public Nav Links */}
-        <nav className="hidden md:flex items-center gap-6 text-xs font-bold text-charcoal">
+        <nav className="hidden md:flex items-center gap-5 text-xs font-bold text-charcoal">
           <Link to="/" className="hover:text-forest transition-colors">
             {t('nav.home')}
           </Link>
-          <Link to="/map" className="hover:text-forest transition-colors flex items-center gap-1">
-            <MapPin className="w-3.5 h-3.5 text-orange-warm" />
-            <span>Food Map</span>
+          <Link to="/rescuetwin" className="hover:text-forest transition-colors flex items-center gap-1 text-forest">
+            <Sparkles className="w-3.5 h-3.5 text-orange-warm" />
+            <span>RescueTwin AI</span>
           </Link>
           <Link to="/tracking" className="hover:text-forest transition-colors flex items-center gap-1 text-forest">
             <Truck className="w-3.5 h-3.5 text-orange-warm animate-pulse" />
             <span>Live Tracking</span>
           </Link>
-          <Link to="/impact" className="hover:text-forest transition-colors">
-            {t('nav.liveImpact')}
+          <Link to="/map" className="hover:text-forest transition-colors flex items-center gap-1">
+            <MapPin className="w-3.5 h-3.5 text-orange-warm" />
+            <span>Food Map</span>
           </Link>
-          <Link to="/about" className="hover:text-forest transition-colors">
-            How It Works
+          <Link to="/messages" className="hover:text-forest transition-colors flex items-center gap-1">
+            <Bell className="w-3.5 h-3.5 text-forest" />
+            <span>Mission Chat</span>
+          </Link>
+          <Link to="/impact-ledger" className="hover:text-forest transition-colors">
+            Impact Ledger
           </Link>
         </nav>
 

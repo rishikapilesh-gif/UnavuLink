@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { RescueMission, MissionStatus } from '../../types';
@@ -17,7 +18,8 @@ import {
   RotateCcw,
   Sparkles,
   Play,
-  Pause
+  Pause,
+  MessageSquare
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -418,6 +420,27 @@ export const LiveTrackingView: React.FC<LiveTrackingViewProps> = ({ mission, onU
           <p className="font-bold text-charcoal">{mission.delivery_address}</p>
           <span className="text-[11px] text-blue-700 font-semibold block">Recipient: {mission.recipient_name}</span>
         </div>
+      </div>
+
+      {/* Contextual In-App Chat Action Bar */}
+      <div className="p-4 bg-cream rounded-subtle border border-sage flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-full bg-forest text-white flex items-center justify-center font-bold text-xs shadow-xs">
+            💬
+          </div>
+          <div>
+            <h4 className="font-bold text-charcoal text-xs">Mission Coordination Channel</h4>
+            <p className="text-[11px] text-muted">Coordinate directly with {mission.donor_name} &amp; {mission.volunteer_name || 'RescueMate'}.</p>
+          </div>
+        </div>
+
+        <Link
+          to={`/messages`}
+          className="px-4 py-2 bg-forest hover:bg-forest-dark text-white rounded-subtle font-extrabold text-xs shadow-xs transition-colors flex items-center gap-1.5 self-start sm:self-auto"
+        >
+          <MessageSquare className="w-3.5 h-3.5" />
+          <span>Open Mission Chat</span>
+        </Link>
       </div>
 
       {/* OTP Modal */}

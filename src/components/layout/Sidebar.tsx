@@ -24,22 +24,30 @@ import {
   History
 } from 'lucide-react';
 
+interface SidebarLink {
+  to: string;
+  label: string;
+  icon: any;
+  badge?: string;
+  highlight?: boolean;
+}
+
 export const Sidebar: React.FC = () => {
   const { role, isVolunteerApproved } = useAuth();
 
-  const getLinks = () => {
+  const getLinks = (): SidebarLink[] => {
     switch (role) {
       case 'Admin':
         return [
           { to: '/admin', label: 'Command Centre', icon: LayoutDashboard },
+          { to: '/rescuetwin', label: 'RescueTwin™ AI Core', icon: Cpu, badge: 'AI' },
+          { to: '/admin/whatsapp', label: 'WhatsApp Meta API', icon: Sparkles },
+          { to: '/impact-ledger', label: 'Impact Ledger', icon: FileText },
+          { to: '/messages', label: 'Mission Chat', icon: Inbox },
+          { to: '/admin/digital-twin', label: 'Crisis Simulator', icon: Navigation },
           { to: '/admin/verifications', label: 'Verifications', icon: Users },
-          { to: '/admin/listings', label: 'Food Listings', icon: UtensilsCrossed },
-          { to: '/admin/rescues', label: 'Rescue Missions', icon: Navigation },
           { to: '/admin/incidents', label: 'Safety Incidents', icon: ShieldAlert, badge: '1' },
-          { to: '/admin/emergency', label: 'Emergency Mode', icon: Flame },
-          { to: '/admin/digital-twin', label: 'Digital Twin', icon: Cpu, badge: 'AI' },
-          { to: '/admin/hotspots', label: 'Community Hotspots', icon: MapPin },
-          { to: '/admin/audit', label: 'Audit Logs', icon: FileText },
+          { to: '/notifications/preferences', label: 'Notification Settings', icon: Activity },
         ];
 
       case 'Donor':
@@ -48,8 +56,10 @@ export const Sidebar: React.FC = () => {
           { to: '/donor/donate', label: 'Post Food Rescue', icon: PlusCircle, highlight: true },
           { to: '/donor/listings', label: 'My Listings', icon: UtensilsCrossed },
           { to: '/donor/requests', label: 'Donation Requests', icon: Inbox, badge: '2' },
-          { to: '/donor/tracking', label: 'Rescue Tracking', icon: Navigation },
+          { to: '/tracking', label: 'Live OSRM Tracking', icon: Navigation },
+          { to: '/messages', label: 'Coordination Chat', icon: Inbox },
           { to: '/donor/predictive', label: 'Predictive Surplus', icon: Sparkles, badge: 'AI' },
+          { to: '/impact-ledger', label: 'Impact Ledger', icon: FileText },
         ];
 
       case 'Acceptor':
@@ -57,30 +67,33 @@ export const Sidebar: React.FC = () => {
           { to: '/acceptor', label: 'Acceptor Dashboard', icon: LayoutDashboard },
           { to: '/acceptor/available', label: 'Available Food', icon: UtensilsCrossed },
           { to: '/acceptor/requests', label: 'My Requests', icon: Inbox },
-          { to: '/acceptor/incoming', label: 'Incoming Deliveries', icon: Navigation },
-          { to: '/acceptor/history', label: 'Food History', icon: History },
+          { to: '/tracking', label: 'Incoming Deliveries', icon: Navigation },
+          { to: '/messages', label: 'Mission Chat', icon: Inbox },
+          { to: '/impact-ledger', label: 'Food Ledger', icon: History },
         ];
 
       case 'NGO':
         return [
           { to: '/ngo', label: 'NGO Dashboard', icon: LayoutDashboard },
+          { to: '/rescuetwin', label: 'FairShare Allocation', icon: Cpu, badge: 'AI' },
           { to: '/ngo/available', label: 'Available Surplus', icon: UtensilsCrossed },
-          { to: '/ngo/missions', label: 'Rescue Missions', icon: Navigation },
-          { to: '/ngo/volunteers', label: 'Volunteer Coordination', icon: Users },
-          { to: '/ngo/capacity', label: 'Capacity & Storage', icon: Building2 },
+          { to: '/tracking', label: 'Active Missions', icon: Navigation },
+          { to: '/messages', label: 'Rescue Coordination', icon: Inbox },
           { to: '/ngo/beneficiaries', label: 'Beneficiary Records', icon: HeartHandshake },
           { to: '/ngo/distributions', label: 'Distribution Records', icon: ClipboardCheck },
+          { to: '/impact-ledger', label: 'Impact Ledger', icon: FileText },
         ];
 
       case 'Common People':
       default: {
         const base = [
           { to: '/community', label: 'Community Hub', icon: LayoutDashboard },
-          { to: '/community/nearby', label: 'Nearby Food & Fridges', icon: UtensilsCrossed },
+          { to: '/rescuemate', label: 'RescueMate Portal', icon: Truck, highlight: true },
           { to: '/map', label: 'Tamil Nadu Map', icon: MapPin },
+          { to: '/messages', label: 'Volunteer Chat', icon: Inbox },
+          { to: '/impact-ledger', label: 'Impact Ledger', icon: FileText },
           { to: '/community/report-waste', label: 'Report Food Waste', icon: AlertCircle },
-          { to: '/community/report-need', label: 'Report Community Need', icon: HeartHandshake },
-          { to: '/community/volunteer', label: 'Volunteer Portal', icon: Truck },
+          { to: '/notifications/preferences', label: 'Notification Preferences', icon: Activity },
         ];
 
         if (isVolunteerApproved) {

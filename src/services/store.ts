@@ -9,7 +9,16 @@ import {
   VolunteerProfile, 
   SafetyIncident, 
   BeneficiaryRecord, 
-  DistributionRecord 
+  DistributionRecord,
+  DonorBusinessProfile,
+  AcceptorProfile,
+  NGOProfile,
+  RescueMateProfile,
+  ChatConversation,
+  ChatMessage,
+  WhatsAppIntegrationConfig,
+  NotificationPreferences,
+  UserRole
 } from '../types';
 
 import { 
@@ -23,7 +32,15 @@ import {
   INITIAL_VOLUNTEERS, 
   INITIAL_SAFETY_INCIDENTS, 
   INITIAL_BENEFICIARIES, 
-  INITIAL_DISTRIBUTIONS 
+  INITIAL_DISTRIBUTIONS,
+  INITIAL_DONOR_PROFILES,
+  INITIAL_ACCEPTOR_PROFILES,
+  INITIAL_NGO_PROFILES,
+  INITIAL_RESCUEMATES,
+  INITIAL_CONVERSATIONS,
+  INITIAL_CHAT_MESSAGES,
+  INITIAL_WHATSAPP_CONFIG,
+  INITIAL_NOTIFICATION_PREFERENCES
 } from './mockData';
 
 type Listener = () => void;
@@ -380,6 +397,279 @@ class UnavuLinkStore {
   addDistribution(dist: DistributionRecord): void {
     const list = [dist, ...this.getDistributions()];
     this.setStorage('distributions', list);
+  }
+
+  // --- MODULE 2 & 3: ROLE-SPECIFIC PROFILES ---
+
+  // DONOR BUSINESS PROFILES
+  getDonorProfiles(): DonorBusinessProfile[] {
+    return this.getStorage('donor_profiles', INITIAL_DONOR_PROFILES);
+  }
+
+  getDonorProfileByUserId(userId: string): DonorBusinessProfile | undefined {
+    return this.getDonorProfiles().find(d => d.user_id === userId);
+  }
+
+  addDonorProfile(profile: DonorBusinessProfile): void {
+    const list = [profile, ...this.getDonorProfiles()];
+    this.setStorage('donor_profiles', list);
+  }
+
+  updateDonorProfile(profile: DonorBusinessProfile): void {
+    const list = this.getDonorProfiles().map(d => d.id === profile.id ? profile : d);
+    this.setStorage('donor_profiles', list);
+  }
+
+  // ACCEPTOR PROFILES
+  getAcceptorProfiles(): AcceptorProfile[] {
+    return this.getStorage('acceptor_profiles', INITIAL_ACCEPTOR_PROFILES);
+  }
+
+  getAcceptorProfileByUserId(userId: string): AcceptorProfile | undefined {
+    return this.getAcceptorProfiles().find(a => a.user_id === userId);
+  }
+
+  addAcceptorProfile(profile: AcceptorProfile): void {
+    const list = [profile, ...this.getAcceptorProfiles()];
+    this.setStorage('acceptor_profiles', list);
+  }
+
+  // NGO PROFILES
+  getNGOProfiles(): NGOProfile[] {
+    return this.getStorage('ngo_profiles', INITIAL_NGO_PROFILES);
+  }
+
+  getNGOProfileByUserId(userId: string): NGOProfile | undefined {
+    return this.getNGOProfiles().find(n => n.user_id === userId);
+  }
+
+  addNGOProfile(profile: NGOProfile): void {
+    const list = [profile, ...this.getNGOProfiles()];
+    this.setStorage('ngo_profiles', list);
+  }
+
+  // --- MODULE 2.5: RESCUEMATE WORKFLOW & PERMISSIONS ---
+  getRescueMates(): RescueMateProfile[] {
+    return this.getStorage('rescuemates', INITIAL_RESCUEMATES);
+  }
+
+  getRescueMateByUserId(userId: string): RescueMateProfile | undefined {
+    return this.getRescueMates().find(r => r.user_id === userId);
+  }
+
+  addRescueMateApplication(application: RescueMateProfile): void {
+    const list = [application, ...this.getRescueMates()];
+    this.setStorage('rescuemates', list);
+  }
+
+  approveRescueMate(applicationId: string, adminUserId: string): void {
+    const list = this.getRescueMates().map(r => {
+      if (r.id === applicationId) {
+        return {
+          ...r,
+          approval_status: 'approved' as const,
+          approved_by: adminUserId,
+          approved_at: new Date().toISOString()
+        };
+      }
+      return r;
+    });
+    this.setStorage('rescuemates', list);
+
+    // Update corresponding user profile to volunteer_approved: true
+    const approvedRm = list.find(r => r.id === applicationId);
+    if (approvedRm) {
+      const user = this.getProfileById(approvedRm.user_id);
+      if (user) {
+        this.updateProfile({
+          ...user,
+          is_volunteer: true,
+          volunteer_approved: true
+        });
+      }
+    }
+  }
+
+  rejectRescueMate(applicationId: string): void {
+    const list = this.getRescueMates().map(r => {
+      if (r.id === applicationId) {
+        return {
+          ...r,
+          approval_status: 'rejected' as const
+        };
+      }
+      return r;
+    });
+    this.setStorage('rescuemates', list);
+  }
+
+  acceptMissionAsRescueMate(missionId: string, rescueMate: RescueMateProfile): boolean {
+    const mission = this.getMissionById(missionId);
+    if (!mission) return false;
+
+    const updatedMission: RescueMission = {
+      ...mission,
+      volunteer_id: rescueMate.user_id,
+      volunteer_name: rescueMate.full_name,
+      volunteer_phone: rescueMate.mobile_number,
+      mission_status: 'volunteer_assigned'
+    };
+    this.updateMission(updatedMission);
+
+    // Update RescueMate active mission
+    const updatedRm: RescueMateProfile = {
+      ...rescueMate,
+      active_mission_id: missionId
+    };
+    const list = this.getRescueMates().map(r => r.id === rescueMate.id ? updatedRm : r);
+    this.setStorage('rescuemates', list);
+
+    return true;
+  }
+
+  // --- MODULE 8 & 9: CHAT CONVERSATIONS & REAL-TIME INBOX ---
+  getConversations(): ChatConversation[] {
+    return this.getStorage('conversations', INITIAL_CONVERSATIONS);
+  }
+
+  getConversationById(id: string): ChatConversation | undefined {
+    return this.getConversations().find(c => c.id === id);
+  }
+
+  getMessagesByConversationId(conversationId: string): ChatMessage[] {
+    const all = this.getStorage('chat_messages', INITIAL_CHAT_MESSAGES);
+    return all.filter(m => m.conversation_id === conversationId);
+  }
+
+  sendMessage(
+    conversationId: string, 
+    senderId: string, 
+    senderName: string, 
+    senderRole: UserRole, 
+    content: string, 
+    messageType: 'text' | 'image' | 'predefined_action' | 'system' = 'text'
+  ): ChatMessage {
+    const all = this.getStorage('chat_messages', INITIAL_CHAT_MESSAGES);
+    const newMsg: ChatMessage = {
+      id: `msg-${Date.now()}`,
+      conversation_id: conversationId,
+      sender_id: senderId,
+      sender_name: senderName,
+      sender_role: senderRole,
+      message_type: messageType,
+      content,
+      delivery_status: 'sent',
+      created_at: new Date().toISOString()
+    };
+
+    this.setStorage('chat_messages', [...all, newMsg]);
+
+    // Update conversation last message preview
+    const convs = this.getConversations().map(c => {
+      if (c.id === conversationId) {
+        return {
+          ...c,
+          last_message_text: content,
+          last_message_time: new Date().toISOString()
+        };
+      }
+      return c;
+    });
+    this.setStorage('conversations', convs);
+
+    return newMsg;
+  }
+
+  getOrCreateMissionConversation(mission: RescueMission, currentUserId: string): ChatConversation {
+    const convs = this.getConversations();
+    let found = convs.find(c => c.related_mission_id === mission.id);
+
+    if (!found) {
+      found = {
+        id: `conv-${mission.id}`,
+        conversation_type: 'donor_rescuemate',
+        title: `Mission ${mission.batch_id} Coordination`,
+        related_donation_id: mission.food_listing_id,
+        related_batch_id: mission.batch_id,
+        related_mission_id: mission.id,
+        food_name: mission.food_name,
+        pickup_address: mission.pickup_address,
+        delivery_address: mission.delivery_address,
+        mission_status: mission.mission_status,
+        participant_ids: [mission.donor_id, mission.recipient_id, mission.volunteer_id || currentUserId],
+        last_message_text: `Mission initialized. Ready for pickup.`,
+        last_message_time: new Date().toISOString(),
+        unread_count: 0,
+        created_at: new Date().toISOString()
+      };
+      this.setStorage('conversations', [found, ...convs]);
+    }
+
+    return found;
+  }
+
+  // --- MODULE 8.3: WHATSAPP CONFIGURATION ---
+  getWhatsAppConfig(): WhatsAppIntegrationConfig {
+    return this.getStorage('whatsapp_config', INITIAL_WHATSAPP_CONFIG);
+  }
+
+  updateWhatsAppConfig(config: Partial<WhatsAppIntegrationConfig>): WhatsAppIntegrationConfig {
+    const current = this.getWhatsAppConfig();
+    const updated = { ...current, ...config };
+    this.setStorage('whatsapp_config', updated);
+    return updated;
+  }
+
+  // --- MODULE 10: NOTIFICATION PREFERENCES ---
+  getNotificationPreferences(userId?: string): NotificationPreferences {
+    return this.getStorage('notification_prefs', INITIAL_NOTIFICATION_PREFERENCES);
+  }
+
+  updateNotificationPreferences(prefs: NotificationPreferences): void {
+    this.setStorage('notification_prefs', prefs);
+  }
+
+  // --- MODULE 7: IMPACT LEDGER & VERIFIED TRACEABILITY ---
+  getImpactLedger() {
+    const listings = this.getListings();
+    const missions = this.getMissions();
+    const distributions = this.getDistributions();
+
+    return listings.map(l => {
+      const mission = missions.find(m => m.food_listing_id === l.id || m.batch_id === l.batch_id);
+      const dist = distributions.find(d => d.batch_id === l.batch_id);
+
+      const isListed = true;
+      const isApproved = l.listing_status !== 'draft' && l.listing_status !== 'rejected';
+      const isAllocated = Boolean(mission);
+      const isPickedUp = mission?.mission_status === 'picked_up' || mission?.mission_status === 'in_transit' || mission?.mission_status === 'delivered' || mission?.mission_status === 'completed';
+      const isReceived = mission?.mission_status === 'delivered' || mission?.mission_status === 'completed';
+      const isDistributed = Boolean(dist && dist.quantity_distributed_kg > 0);
+      const isServed = Boolean(dist && dist.meals_served_count > 0);
+
+      return {
+        batchId: l.batch_id,
+        foodName: l.food_name,
+        donorName: l.donor_name || 'Verified Kitchen',
+        donorId: l.donor_id,
+        quantityKg: l.quantity,
+        portions: l.estimated_portions,
+        category: l.food_category,
+        recipientName: mission?.recipient_name || dist?.distribution_location || 'Pending Allocation',
+        rescueMateName: mission?.volunteer_name || 'Unassigned',
+        stages: {
+          listed: { status: isListed, timestamp: l.created_at },
+          approved: { status: isApproved, timestamp: l.created_at },
+          allocated: { status: isAllocated, timestamp: mission?.created_at },
+          pickedUp: { status: isPickedUp, timestamp: mission?.created_at },
+          received: { status: isReceived, timestamp: dist?.distribution_time },
+          distributed: { status: isDistributed, timestamp: dist?.distribution_time },
+          served: { status: isServed, timestamp: dist?.distribution_time }
+        },
+        verifiedCredits: isServed ? Math.round(l.estimated_portions * 1.5) : 0,
+        safetyStatus: l.safety_status
+      };
+    });
   }
 
   // RESET TO DEMO DEFAULT

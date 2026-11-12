@@ -9,7 +9,15 @@ import {
   SafetyIncident,
   BeneficiaryRecord,
   DistributionRecord,
-  DonationRequest
+  DonationRequest,
+  DonorBusinessProfile,
+  AcceptorProfile,
+  NGOProfile,
+  RescueMateProfile,
+  ChatConversation,
+  ChatMessage,
+  WhatsAppIntegrationConfig,
+  NotificationPreferences
 } from '../types';
 
 export const INITIAL_PROFILES: UserProfile[] = [
@@ -606,3 +614,291 @@ export const INITIAL_DISTRIBUTIONS: DistributionRecord[] = [
     notes: 'Full quantity safely served to resident children and staff. No incidents.'
   }
 ];
+
+// --- MODULE 2 & 3: ROLE-SPECIFIC INITIAL PROFILES ---
+
+export const INITIAL_DONOR_PROFILES: DonorBusinessProfile[] = [
+  {
+    id: 'donor-prof-1',
+    user_id: 'usr-donor-1',
+    business_name: 'Annapoorna Caterers & Sweets',
+    business_type: 'Catering service',
+    fssai_licence_number: 'FSSAI-12422003001892',
+    address: '42 D.B. Road, RS Puram',
+    district: 'Coimbatore',
+    city: 'Coimbatore',
+    postal_code: '641002',
+    latitude: 11.0123,
+    longitude: 76.9482,
+    operating_hours: '06:00 - 22:30',
+    food_prep_facility_type: 'Commercial Hot Kitchen & Steam Kettles',
+    authorized_contact_name: 'Senthil Kumar',
+    authorized_contact_phone: '+91 98422 20002',
+    authorized_contact_email: 'senthil@annapoorna.demo',
+    verification_status: 'verified',
+    rescue_credits: 320,
+    total_donations: 18,
+    total_kg_donated: 480.0,
+    created_at: new Date(Date.now() - 60 * 86400000).toISOString()
+  },
+  {
+    id: 'donor-prof-2',
+    user_id: 'usr-donor-2',
+    business_name: 'Grand Palace Banquet & Conventions',
+    business_type: 'Wedding hall',
+    fssai_licence_number: 'FSSAI-12423004008129',
+    address: '88 Avinashi Road, Peelamedu',
+    district: 'Coimbatore',
+    city: 'Coimbatore',
+    postal_code: '641004',
+    latitude: 11.0315,
+    longitude: 77.0189,
+    operating_hours: '07:00 - 23:00',
+    food_prep_facility_type: 'Banquet Production Kitchen',
+    authorized_contact_name: 'Meenakshi Sundaram',
+    authorized_contact_phone: '+91 98422 30003',
+    authorized_contact_email: 'meenakshi@grandpalace.demo',
+    verification_status: 'verified',
+    rescue_credits: 450,
+    total_donations: 12,
+    total_kg_donated: 820.0,
+    created_at: new Date(Date.now() - 45 * 86400000).toISOString()
+  }
+];
+
+export const INITIAL_ACCEPTOR_PROFILES: AcceptorProfile[] = [
+  {
+    id: 'acceptor-prof-1',
+    user_id: 'usr-acceptor-1',
+    full_name: 'Selvi Anbarasan (Ukkadam Community Kitchen)',
+    entity_type: 'Community group',
+    dietary_preferences: ['Vegetarian', 'Mild Spices'],
+    allergen_restrictions: ['Peanuts'],
+    approx_portions_needed: 65,
+    people_served_count: 70,
+    preferred_receiving_method: 'Self-Pickup',
+    address_privacy_enabled: true,
+    address_neighborhood: 'Ukkadam Lake Road Area',
+    district: 'Coimbatore',
+    city: 'Coimbatore',
+    postal_code: '641001',
+    storage_capacity_description: '3 insulated steel food containers with cold water dispenser',
+    preferred_collection_times: ['12:30 - 14:00', '19:30 - 21:00'],
+    created_at: new Date(Date.now() - 30 * 86400000).toISOString()
+  }
+];
+
+export const INITIAL_NGO_PROFILES: NGOProfile[] = [
+  {
+    id: 'ngo-prof-1',
+    user_id: 'usr-ngo-1',
+    organisation_name: 'Anbalayam Shelter for Homeless & Children',
+    registration_type: 'Trust',
+    registration_number: 'TN/CBE/TRUST/2014/481',
+    organisation_description: 'Non-profit care home supporting 90 children, elderly residents, and day shelters.',
+    year_established: 2014,
+    contact_person: 'Sister Mary Joseph',
+    official_email: 'sister.mary@anbalayam.demo',
+    mobile_number: '+91 98422 40004',
+    designation: 'Director of Shelter Operations',
+    verification_status: 'verified',
+    primary_location: '12 Alagesan Road, Saibaba Colony',
+    service_areas: ['Saibaba Colony', 'Gandhipuram', 'R.S. Puram', 'Tatabad'],
+    operating_hours: '06:00 - 22:00',
+    daily_receiving_capacity_kg: 120.0,
+    storage_capacity_kg: 250.0,
+    refrigeration_available: true,
+    accepted_food_categories: ['Cooked Meals', 'Bakery', 'Raw Produce', 'Dairy'],
+    beneficiary_service_capacity: 110,
+    distribution_facilities: ['Main Dining Hall', 'Elder Care Ward', 'Community Distribution Gate'],
+    created_at: new Date(Date.now() - 90 * 86400000).toISOString()
+  }
+];
+
+export const INITIAL_RESCUEMATES: RescueMateProfile[] = [
+  {
+    id: 'rescuemate-1',
+    user_id: 'usr-vol-1',
+    full_name: 'Karthik Subramanian',
+    mobile_number: '+91 98422 60006',
+    email: 'karthik.volunteer@unavulink.demo',
+    preferred_language: 'en',
+    service_areas: ['RS Puram', 'Saibaba Colony', 'Gandhipuram'],
+    city: 'Coimbatore',
+    district: 'Coimbatore',
+    latitude: 11.0168,
+    longitude: 76.9558,
+    available_days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+    available_time_slots: ['Morning (08:00 - 12:00)', 'Night (19:00 - 23:00)'],
+    transport_type: 'Two-wheeler',
+    carrying_capacity_kg: 25.0,
+    preferred_travel_distance_km: 12.0,
+    emergency_contact_name: 'Subramanian V. (Father)',
+    emergency_contact_phone: '+91 98422 69999',
+    safety_agreement_accepted: true,
+    approval_status: 'approved',
+    approved_by: 'usr-admin-1',
+    approved_at: new Date(Date.now() - 30 * 86400000).toISOString(),
+    rescue_credits: 420,
+    total_rescues: 34,
+    active_mission_id: 'msn-101',
+    created_at: new Date(Date.now() - 40 * 86400000).toISOString()
+  },
+  {
+    id: 'rescuemate-2',
+    user_id: 'usr-vol-2',
+    full_name: 'Priya Ramesh (College Student Volunteer)',
+    mobile_number: '+91 98422 70007',
+    email: 'priya.ramesh@unavulink.demo',
+    preferred_language: 'ta',
+    service_areas: ['Peelamedu', 'Singanallur', 'Hopes College'],
+    city: 'Coimbatore',
+    district: 'Coimbatore',
+    latitude: 11.0289,
+    longitude: 77.0023,
+    available_days: ['Saturday', 'Sunday'],
+    available_time_slots: ['Afternoon (12:00 - 16:00)', 'Evening (16:00 - 20:00)'],
+    transport_type: 'Two-wheeler',
+    carrying_capacity_kg: 20.0,
+    preferred_travel_distance_km: 8.0,
+    emergency_contact_name: 'Ramesh K. (Father)',
+    emergency_contact_phone: '+91 98422 79999',
+    safety_agreement_accepted: true,
+    approval_status: 'pending', // Pending Admin review demonstration!
+    rescue_credits: 0,
+    total_rescues: 0,
+    created_at: new Date(Date.now() - 2 * 86400000).toISOString()
+  }
+];
+
+// --- MODULE 8 & 9: CHAT CONVERSATIONS & MESSAGES ---
+
+export const INITIAL_CONVERSATIONS: ChatConversation[] = [
+  {
+    id: 'conv-101',
+    conversation_type: 'donor_rescuemate',
+    title: 'Mission UNV-2026-CBE-001 Handover',
+    related_donation_id: 'lst-1',
+    related_batch_id: 'UNV-2026-CBE-001',
+    related_mission_id: 'msn-101',
+    food_name: 'Hot Sambar Rice & Poriyal',
+    pickup_address: '42 D.B. Road, RS Puram, Coimbatore',
+    delivery_address: '12 Alagesan Road, Saibaba Colony',
+    mission_status: 'in_transit',
+    participant_ids: ['usr-donor-1', 'usr-vol-1', 'usr-admin-1'],
+    last_message_text: 'Food has been collected from kitchen. I am en route to Saibaba Colony.',
+    last_message_time: new Date(Date.now() - 12 * 60000).toISOString(),
+    unread_count: 0,
+    created_at: new Date(Date.now() - 45 * 60000).toISOString()
+  },
+  {
+    id: 'conv-102',
+    conversation_type: 'ngo_rescuemate',
+    title: 'Anbalayam Shelter Drop-Off Coordination',
+    related_donation_id: 'lst-1',
+    related_batch_id: 'UNV-2026-CBE-001',
+    related_mission_id: 'msn-101',
+    food_name: 'Hot Sambar Rice & Poriyal',
+    pickup_address: 'RS Puram Kitchen',
+    delivery_address: 'Anbalayam Saibaba Colony Shelter',
+    mission_status: 'in_transit',
+    participant_ids: ['usr-ngo-1', 'usr-vol-1'],
+    last_message_text: 'We have kept clean serving vessels ready in Dining Hall Gate 2.',
+    last_message_time: new Date(Date.now() - 5 * 60000).toISOString(),
+    unread_count: 1,
+    created_at: new Date(Date.now() - 30 * 60000).toISOString()
+  }
+];
+
+export const INITIAL_CHAT_MESSAGES: ChatMessage[] = [
+  {
+    id: 'msg-1',
+    conversation_id: 'conv-101',
+    sender_id: 'usr-donor-1',
+    sender_name: 'Senthil Kumar (Chef)',
+    sender_role: 'Donor',
+    message_type: 'text',
+    content: 'Vanakkam Karthik! Sambar rice is packed in two 25L insulated stainless drums at 68°C. Pickup OTP ready.',
+    delivery_status: 'read',
+    created_at: new Date(Date.now() - 35 * 60000).toISOString(),
+    read_at: new Date(Date.now() - 34 * 60000).toISOString()
+  },
+  {
+    id: 'msg-2',
+    conversation_id: 'conv-101',
+    sender_id: 'usr-vol-1',
+    sender_name: 'Karthik Subramanian',
+    sender_role: 'Common People', // RescueMate
+    message_type: 'predefined_action',
+    content: 'I have arrived at Annapoorna Kitchen. Verified thermal meter and entering pickup OTP now.',
+    delivery_status: 'read',
+    created_at: new Date(Date.now() - 25 * 60000).toISOString(),
+    read_at: new Date(Date.now() - 24 * 60000).toISOString()
+  },
+  {
+    id: 'msg-3',
+    conversation_id: 'conv-101',
+    sender_id: 'usr-vol-1',
+    sender_name: 'Karthik Subramanian',
+    sender_role: 'Common People',
+    message_type: 'text',
+    content: 'Food has been collected from kitchen. I am en route to Saibaba Colony.',
+    delivery_status: 'read',
+    created_at: new Date(Date.now() - 12 * 60000).toISOString(),
+    read_at: new Date(Date.now() - 10 * 60000).toISOString()
+  },
+  {
+    id: 'msg-4',
+    conversation_id: 'conv-102',
+    sender_id: 'usr-vol-1',
+    sender_name: 'Karthik Subramanian',
+    sender_role: 'Common People',
+    message_type: 'text',
+    content: 'Sister Mary, ETA at Anbalayam is approx 15 minutes. 75 portions hot food.',
+    delivery_status: 'read',
+    created_at: new Date(Date.now() - 10 * 60000).toISOString(),
+    read_at: new Date(Date.now() - 8 * 60000).toISOString()
+  },
+  {
+    id: 'msg-5',
+    conversation_id: 'conv-102',
+    sender_id: 'usr-ngo-1',
+    sender_name: 'Sister Mary Joseph',
+    sender_role: 'NGO',
+    message_type: 'text',
+    content: 'We have kept clean serving vessels ready in Dining Hall Gate 2.',
+    delivery_status: 'delivered',
+    created_at: new Date(Date.now() - 5 * 60000).toISOString()
+  }
+];
+
+export const INITIAL_WHATSAPP_CONFIG: WhatsAppIntegrationConfig = {
+  phone_number_id: '',
+  business_account_id: '',
+  webhook_verify_token: 'unavulink_webhook_secret_2026',
+  webhook_callback_url: 'https://vkmjqljqudklfghf.supabase.co/functions/v1/whatsapp-webhook',
+  is_connected: false,
+  status_message: 'Official Meta WhatsApp Business Cloud API architecture ready. Credentials require configuration in Supabase Dashboard.',
+  template_count: 5,
+  missing_configs: ['WHATSAPP_PHONE_NUMBER_ID', 'WHATSAPP_ACCESS_TOKEN']
+};
+
+export const INITIAL_NOTIFICATION_PREFERENCES: NotificationPreferences = {
+  user_id: 'usr-admin-1',
+  channels: {
+    in_app: true,
+    whatsapp: false,
+    email: true
+  },
+  categories: {
+    requests: true,
+    approvals: true,
+    assignments: true,
+    pickup: true,
+    delivery: true,
+    delays: true,
+    safety_incidents: true
+  },
+  whatsapp_opt_in: false,
+  whatsapp_phone: '+91 98422 10001'
+};

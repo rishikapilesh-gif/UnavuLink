@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { store } from '../../services/store';
 import { TamilNaduMap } from '../../components/maps/TamilNaduMap';
@@ -19,7 +20,10 @@ import {
   FileText,
   UserCheck,
   Building,
-  Clock
+  Clock,
+  Truck,
+  MessageSquare,
+  ArrowRight
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -102,20 +106,28 @@ export const AdminCommandCentre: React.FC = () => {
 
         {/* Action Buttons */}
         <div className="flex items-center gap-2 flex-wrap">
+          <Link
+            to="/rescuetwin"
+            className="px-3.5 py-2 bg-forest hover:bg-forest-dark text-white rounded-subtle font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all"
+          >
+            <Cpu className="w-4 h-4 text-orange-warm" />
+            <span>RescueTwin AI</span>
+          </Link>
+
+          <Link
+            to="/admin/whatsapp"
+            className="px-3.5 py-2 bg-[#25D366] hover:bg-[#128C7E] text-white rounded-subtle font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all"
+          >
+            <MessageSquare className="w-4 h-4" />
+            <span>WhatsApp API</span>
+          </Link>
+
           <button
             onClick={() => setReportModalOpen(true)}
             className="px-3.5 py-2 bg-cherry hover:bg-cherry-coral text-white rounded-subtle font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all"
           >
             <ShieldAlert className="w-4 h-4" />
-            <span>[Demo B] Quarantine Batch</span>
-          </button>
-
-          <button
-            onClick={handleActivateEmergencyMode}
-            className="px-3.5 py-2 bg-orange-warm hover:bg-orange-warm/90 text-white rounded-subtle font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all"
-          >
-            <Flame className="w-4 h-4" />
-            <span>Emergency Mode</span>
+            <span>Quarantine Batch</span>
           </button>
         </div>
       </div>
@@ -270,6 +282,77 @@ export const AdminCommandCentre: React.FC = () => {
               );
             })}
           </div>
+        </div>
+      </div>
+
+      {/* RescueMate Application Reviews Desk */}
+      <div className="bg-white rounded-card p-6 border border-sage shadow-soft space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Truck className="w-5 h-5 text-orange-warm" />
+            <h3 className="font-bold text-sm text-charcoal">RescueMate Volunteer Applications (FSSAI Vetted Fleet)</h3>
+          </div>
+          <span className="text-[11px] text-muted">Approval required before mission dispatch access</span>
+        </div>
+
+        <div className="space-y-3">
+          {store.getRescueMates().map(rm => {
+            const isApproved = rm.approval_status === 'approved';
+            return (
+              <div
+                key={rm.id}
+                className="p-4 bg-cream rounded-subtle border border-sage flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs"
+              >
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-charcoal text-sm">{rm.full_name}</span>
+                    <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase ${
+                      isApproved ? 'bg-status-success/20 text-status-success' : 'bg-orange-warm/20 text-orange-warm'
+                    }`}>
+                      {rm.approval_status}
+                    </span>
+                    <span className="text-muted text-[11px]">🛵 {rm.transport_type} • Cap: {rm.carrying_capacity_kg} kg</span>
+                  </div>
+                  <p className="text-muted text-[11px] mt-0.5">
+                    {rm.email} • {rm.mobile_number} • City: <strong>{rm.city}</strong> • Max travel: {rm.preferred_travel_distance_km} km
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {isApproved ? (
+                    <span className="text-status-success font-bold flex items-center gap-1">
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>Certified Active</span>
+                    </span>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => {
+                          store.approveRescueMate(rm.id, user?.id || 'usr-admin-1');
+                          setActionNotice(`RescueMate "${rm.full_name}" approved! Permissions granted to accept live missions.`);
+                          confetti({ particleCount: 60 });
+                          setTimeout(() => setActionNotice(null), 4000);
+                        }}
+                        className="px-3.5 py-1.5 bg-forest hover:bg-forest-dark text-white rounded font-bold text-xs shadow-xs"
+                      >
+                        Approve as RescueMate
+                      </button>
+                      <button
+                        onClick={() => {
+                          store.rejectRescueMate(rm.id);
+                          setActionNotice(`RescueMate application for "${rm.full_name}" marked rejected.`);
+                          setTimeout(() => setActionNotice(null), 4000);
+                        }}
+                        className="px-3 py-1.5 bg-white border border-sage hover:bg-cream text-cherry rounded font-bold text-xs"
+                      >
+                        Reject
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
