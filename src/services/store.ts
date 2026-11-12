@@ -18,7 +18,15 @@ import {
   ChatMessage,
   WhatsAppIntegrationConfig,
   NotificationPreferences,
-  UserRole
+  UserRole,
+  EventRegistration,
+  EventSurplusPrediction,
+  EventInterestRegistration,
+  HostelProfile,
+  HostelDailyMealPlan,
+  LiveSyncEvent,
+  LiveSyncEventType,
+  ClaimMissionResult
 } from '../types';
 
 import { 
@@ -40,13 +48,42 @@ import {
   INITIAL_CONVERSATIONS,
   INITIAL_CHAT_MESSAGES,
   INITIAL_WHATSAPP_CONFIG,
-  INITIAL_NOTIFICATION_PREFERENCES
+  INITIAL_NOTIFICATION_PREFERENCES,
+  INITIAL_EVENT_REGISTRATIONS,
+  INITIAL_EVENT_INTERESTS,
+  INITIAL_HOSTEL_PROFILES,
+  INITIAL_HOSTEL_MEAL_PLANS
 } from './mockData';
 
 type Listener = () => void;
 
 class UnavuLinkStore {
   private listeners: Set<Listener> = new Set();
+  private clientId: string = `client-${Math.random().toString(36).substring(2, 9)}`;
+  private syncChannel: BroadcastChannel | null = null;
+
+  constructor() {
+    if (typeof window !== 'undefined') {
+      try {
+        if ('BroadcastChannel' in window) {
+          this.syncChannel = new BroadcastChannel('unavulink_livesync');
+          this.syncChannel.onmessage = (ev) => {
+            if (ev.data && ev.data.originClientId !== this.clientId) {
+              this.emitChange();
+            }
+          };
+        }
+      } catch (err) {
+        console.warn('LiveSync BroadcastChannel not initialized', err);
+      }
+
+      window.addEventListener('storage', (e) => {
+        if (e.key && e.key.startsWith('unavulink_')) {
+          this.emitChange();
+        }
+      });
+    }
+  }
 
   private emitChange(): void {
     this.listeners.forEach(listener => {
@@ -503,10 +540,31 @@ class UnavuLinkStore {
     this.setStorage('rescuemates', list);
   }
 
-  acceptMissionAsRescueMate(missionId: string, rescueMate: RescueMateProfile): boolean {
-    const mission = this.getMissionById(missionId);
-    if (!mission) return false;
+  // --- ATOMIC VOLUNTEER CLAIMING & RACECONDITION PREVENTION ---
+  claimMissionAtomic(missionId: string, rescueMate: RescueMateProfile): ClaimMissionResult {
+    const missions = this.getMissions();
+    const mission = missions.find(m => m.id === missionId);
 
+    if (!mission) {
+      return {
+        success: false,
+        message: 'Rescue mission not found.',
+        error: 'NOT_FOUND'
+      };
+    }
+
+    // Atomic conflict verification: if volunteer already assigned to someone else
+    if (mission.volunteer_id && mission.volunteer_id !== rescueMate.user_id) {
+      return {
+        success: false,
+        message: `Mission was already accepted by ${mission.volunteer_name || 'another RescueMate'}. No duplicate assignments permitted.`,
+        claimedBy: mission.volunteer_name,
+        claimedAt: mission.created_at,
+        error: 'ALREADY_CLAIMED'
+      };
+    }
+
+    // Assign mission atomically
     const updatedMission: RescueMission = {
       ...mission,
       volunteer_id: rescueMate.user_id,
@@ -524,7 +582,336 @@ class UnavuLinkStore {
     const list = this.getRescueMates().map(r => r.id === rescueMate.id ? updatedRm : r);
     this.setStorage('rescuemates', list);
 
-    return true;
+    // Broadcast LiveSync event across all open client tabs/windows
+    this.broadcastLiveSync(
+      'MISSION_CLAIMED',
+      { missionId, volunteerId: rescueMate.user_id, volunteerName: rescueMate.full_name },
+      `RescueMate ${rescueMate.full_name} accepted rescue mission ${mission.batch_id}`
+    );
+
+    return {
+      success: true,
+      message: `Mission locked and assigned to ${rescueMate.full_name}. Proceed to pickup.`,
+      claimedBy: rescueMate.full_name,
+      claimedAt: new Date().toISOString()
+    };
+  }
+
+  acceptMissionAsRescueMate(missionId: string, rescueMate: RescueMateProfile): boolean {
+    const res = this.claimMissionAtomic(missionId, rescueMate);
+    return res.success;
+  }
+
+  // --- MEALPULSE AI: LIVESYNC ENGINE ---
+  broadcastLiveSync(eventType: LiveSyncEventType, payload: any, summary: string): LiveSyncEvent {
+    const syncEvent: LiveSyncEvent = {
+      id: `sync-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      timestamp: new Date().toISOString(),
+      eventType,
+      payload,
+      summary,
+      originClientId: this.clientId
+    };
+
+    const history = this.getStorage<LiveSyncEvent[]>('livesync_events', []);
+    const updated = [syncEvent, ...history].slice(0, 50);
+    this.setStorage('livesync_events', updated);
+
+    if (this.syncChannel) {
+      try {
+        this.syncChannel.postMessage(syncEvent);
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    return syncEvent;
+  }
+
+  getLiveSyncEvents(): LiveSyncEvent[] {
+    return this.getStorage<LiveSyncEvent[]>('livesync_events', [
+      {
+        id: 'sync-init-1',
+        timestamp: new Date().toISOString(),
+        eventType: 'STATUS_CHANGE',
+        payload: { engine: 'MealPulse AI' },
+        summary: 'MealPulse AI LiveSync network active across connected nodes',
+        originClientId: 'system-seed'
+      }
+    ]);
+  }
+
+  getClientId(): string {
+    return this.clientId;
+  }
+
+  // --- MEALPULSE AI: EVENTPULSE METHODS ---
+  getEventRegistrations(): EventRegistration[] {
+    return this.getStorage('event_registrations', INITIAL_EVENT_REGISTRATIONS);
+  }
+
+  getEventRegistrationById(id: string): EventRegistration | undefined {
+    return this.getEventRegistrations().find(e => e.id === id);
+  }
+
+  addEventRegistration(event: EventRegistration): EventRegistration {
+    const list = [event, ...this.getEventRegistrations()];
+    this.setStorage('event_registrations', list);
+    this.broadcastLiveSync(
+      'EVENT_REGISTERED',
+      event,
+      `EventPulse: New event scheduled - "${event.event_name}" (${event.approx_guests} guests on ${event.event_date})`
+    );
+    return event;
+  }
+
+  updateEventRegistration(event: EventRegistration): void {
+    const list = this.getEventRegistrations().map(e => e.id === event.id ? event : e);
+    this.setStorage('event_registrations', list);
+  }
+
+  calculateEventPrediction(event: EventRegistration): EventSurplusPrediction {
+    const factors: string[] = [];
+
+    // Transparent statistical prediction based on event type, RSVP attrition and buffer
+    let attritionRate = 0.12;
+    if (event.event_type === 'Wedding' || event.event_type === 'Reception') {
+      attritionRate = 0.15;
+      factors.push('Traditional wedding banquet RSVP variance: historical 12-16% attendance drop-off');
+      factors.push('Caterer safe buffer formula: +15% over anticipated headcount');
+    } else if (event.event_type === 'Corporate event') {
+      attritionRate = 0.10;
+      factors.push('Corporate delegate RSVP pattern: 8-12% average meal skip');
+    } else if (event.event_type === 'College celebration') {
+      attritionRate = 0.16;
+      factors.push('College student crowd fluctuation across multiple campus venues (~16%)');
+    } else {
+      attritionRate = 0.11;
+      factors.push('Standard banquet food service margin (10-12%)');
+    }
+
+    const plannedBuffer = Math.max(0, event.planned_meals - event.approx_guests);
+    if (plannedBuffer > 0) {
+      factors.push(`Explicit planned meal buffer: ${plannedBuffer} additional portions ordered`);
+    }
+
+    if (event.meal_type === 'Dinner') {
+      factors.push('Dinner service pattern: reduced guest appetite after evening snacks');
+    }
+
+    if (event.prep_arrangement === 'External provider') {
+      factors.push('External caterer margin: commercial hedge against running out (+5% surplus tendency)');
+    }
+
+    const estimatedMealsRequired = Math.round(event.approx_guests * (1 - attritionRate * 0.5));
+    const estimatedSurplusMin = Math.max(20, Math.round((event.planned_meals - estimatedMealsRequired) * 0.7));
+    const estimatedSurplusMax = Math.max(estimatedSurplusMin + 20, Math.round((event.planned_meals - estimatedMealsRequired) * 1.3));
+    const avgPortions = Math.round((estimatedSurplusMin + estimatedSurplusMax) / 2);
+    const estimatedSurplusKg = Math.round(avgPortions * 0.4);
+
+    const orgs = this.getOrganizations();
+    const nearbyRecipientCandidates = [
+      {
+        id: orgs[0]?.id || 'org-ngo-1',
+        name: orgs[0]?.organisation_name || 'Anbalayam Children Shelter',
+        type: 'Orphanage',
+        requirementPortions: 40,
+        distanceKm: 2.8
+      },
+      {
+        id: orgs[1]?.id || 'org-ngo-2',
+        name: orgs[1]?.organisation_name || 'Karunai Illam Destitute Home',
+        type: 'Old Age Home',
+        requirementPortions: 25,
+        distanceKm: 3.4
+      },
+      {
+        id: 'hub-cbe-001',
+        name: 'Lions Community Feeding Centre',
+        type: 'Community Kitchen',
+        requirementPortions: 30,
+        distanceKm: 4.1
+      }
+    ];
+
+    return {
+      eventId: event.id,
+      estimatedMealsRequired,
+      estimatedSurplusMin,
+      estimatedSurplusMax,
+      estimatedSurplusKg,
+      confidence: event.approx_guests >= 300 ? 'High' : 'Medium',
+      expectedAvailabilityTime: event.expected_end_time || '21:30',
+      influencingFactors: factors,
+      nearbyRecipientCandidates,
+      generatedAt: new Date().toISOString()
+    };
+  }
+
+  getEventInterests(eventId?: string): EventInterestRegistration[] {
+    const list = this.getStorage('event_interests', INITIAL_EVENT_INTERESTS);
+    return eventId ? list.filter(i => i.eventId === eventId) : list;
+  }
+
+  registerEventInterest(interest: EventInterestRegistration): EventInterestRegistration {
+    const list = [interest, ...this.getEventInterests()];
+    this.setStorage('event_interests', list);
+    this.broadcastLiveSync(
+      'INTEREST_REGISTERED',
+      interest,
+      `Interest Registered: ${interest.recipientName} requested ${interest.portionsNeeded} meals from event`
+    );
+    return interest;
+  }
+
+  confirmActualEventSurplus(
+    eventId: string,
+    actualPortions: number,
+    actualKg: number,
+    notes?: string
+  ): FoodListing | null {
+    const event = this.getEventRegistrationById(eventId);
+    if (!event) return null;
+
+    const updatedEvent: EventRegistration = {
+      ...event,
+      status: 'surplus_confirmed',
+      actual_surplus_portions: actualPortions,
+      actual_surplus_kg: actualKg,
+      confirmed_at: new Date().toISOString(),
+      notes: notes || event.notes
+    };
+    this.updateEventRegistration(updatedEvent);
+
+    // Create a verified FoodListing ready for rescue
+    const newListing: FoodListing = {
+      id: `lst-${Date.now()}`,
+      batch_id: `UNV-EVT-${Date.now().toString().slice(-4)}`,
+      donor_id: event.organizer_id,
+      donor_name: event.organizer_name,
+      food_name: `${event.event_name} - Fresh Surplus`,
+      description: `Verified fresh surplus from ${event.event_name} (${event.event_type}). Prepared by ${event.caterer_name || event.organizer_name}.`,
+      food_category: (event.food_categories[0] as any) || 'Cooked Meals',
+      dietary_category: 'Vegetarian',
+      quantity: actualKg,
+      unit: 'kg',
+      estimated_portions: actualPortions,
+      preparation_time: new Date().toISOString(),
+      storage_information: 'Insulated commercial thermal vessels with temperature maintained above 60°C',
+      temperature_celsius: 65,
+      allergens: [],
+      packaging_information: 'Food-grade stainless steel thermal vessels',
+      handling_information: 'Immediate transfer to verified recipient within 90 mins recommended',
+      permitted_handling_deadline: new Date(Date.now() + 4 * 3600000).toISOString(),
+      pickup_location: event.location_name,
+      latitude: event.latitude,
+      longitude: event.longitude,
+      pickup_start: new Date().toISOString(),
+      pickup_end: new Date(Date.now() + 2 * 3600000).toISOString(),
+      safety_status: 'eligible',
+      listing_status: 'available',
+      is_emergency: false,
+      created_at: new Date().toISOString()
+    };
+
+    this.addListing(newListing);
+
+    this.broadcastLiveSync(
+      'SURPLUS_CONFIRMED',
+      { eventId, listingId: newListing.id, portions: actualPortions, kg: actualKg },
+      `Surplus confirmed for "${event.event_name}": ${actualPortions} meals (${actualKg} kg) available for rescue!`
+    );
+
+    return newListing;
+  }
+
+  // --- MEALPULSE AI: HOSTELPULSE METHODS ---
+  getHostelProfiles(): HostelProfile[] {
+    return this.getStorage('hostel_profiles', INITIAL_HOSTEL_PROFILES);
+  }
+
+  getHostelProfileById(id: string): HostelProfile | undefined {
+    return this.getHostelProfiles().find(h => h.id === id);
+  }
+
+  addHostelProfile(profile: HostelProfile): void {
+    const list = [profile, ...this.getHostelProfiles()];
+    this.setStorage('hostel_profiles', list);
+  }
+
+  getHostelMealPlans(hostelId?: string): HostelDailyMealPlan[] {
+    const list = this.getStorage('hostel_meal_plans', INITIAL_HOSTEL_MEAL_PLANS);
+    return hostelId ? list.filter(p => p.hostel_id === hostelId) : list;
+  }
+
+  updateHostelMealPlan(plan: HostelDailyMealPlan): void {
+    const list = this.getHostelMealPlans().map(p => p.id === plan.id ? plan : p);
+    this.setStorage('hostel_meal_plans', list);
+    this.broadcastLiveSync('HOSTEL_UPDATED', plan, `Hostel meal plan updated for ${plan.hostel_name} (${plan.meal})`);
+  }
+
+  confirmHostelSurplus(
+    planId: string, 
+    actualPrepared: number, 
+    actualServed: number, 
+    actualSurplus: number
+  ): FoodListing | null {
+    const plans = this.getHostelMealPlans();
+    const plan = plans.find(p => p.id === planId);
+    if (!plan) return null;
+
+    const updatedPlan: HostelDailyMealPlan = {
+      ...plan,
+      actual_prepared: actualPrepared,
+      actual_served: actualServed,
+      actual_surplus: actualSurplus,
+      status: 'surplus_confirmed',
+      confirmed_at: new Date().toISOString()
+    };
+    this.updateHostelMealPlan(updatedPlan);
+
+    const hostel = this.getHostelProfileById(plan.hostel_id);
+    const kg = Math.round(actualSurplus * 0.4);
+
+    const newListing: FoodListing = {
+      id: `lst-${Date.now()}`,
+      batch_id: `UNV-HST-${Date.now().toString().slice(-4)}`,
+      donor_id: plan.hostel_id,
+      donor_name: hostel?.hostel_name || plan.hostel_name,
+      food_name: `${plan.hostel_name} - ${plan.meal} Surplus`,
+      description: `Fresh mess surplus from ${plan.hostel_name}. Prepared in clean campus kitchen under institutional food safety standards.`,
+      food_category: 'Cooked Meals',
+      dietary_category: 'Vegetarian',
+      quantity: kg,
+      unit: 'kg',
+      estimated_portions: actualSurplus,
+      preparation_time: new Date().toISOString(),
+      storage_information: 'Mess thermal containers, kept covered and warm',
+      temperature_celsius: 62,
+      allergens: [],
+      packaging_information: 'Food-grade mess stainless steel containers',
+      handling_information: 'Pickup and delivery within 2 hours recommended',
+      permitted_handling_deadline: new Date(Date.now() + 3 * 3600000).toISOString(),
+      pickup_location: hostel?.campus_location || 'Campus Dining Gate',
+      latitude: hostel?.latitude || 10.8278,
+      longitude: hostel?.longitude || 77.0607,
+      pickup_start: new Date().toISOString(),
+      pickup_end: new Date(Date.now() + 2 * 3600000).toISOString(),
+      safety_status: 'eligible',
+      listing_status: 'available',
+      is_emergency: false,
+      created_at: new Date().toISOString()
+    };
+
+    this.addListing(newListing);
+
+    this.broadcastLiveSync(
+      'SURPLUS_CONFIRMED',
+      { planId, listingId: newListing.id, portions: actualSurplus, kg },
+      `Campus mess surplus confirmed: ${plan.hostel_name} released ${actualSurplus} ${plan.meal} meals for rescue!`
+    );
+
+    return newListing;
   }
 
   // --- MODULE 8 & 9: CHAT CONVERSATIONS & REAL-TIME INBOX ---

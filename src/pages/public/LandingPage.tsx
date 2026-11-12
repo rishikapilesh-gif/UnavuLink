@@ -391,7 +391,7 @@ export const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* RESCUETWIN AI & VALUE PROPOSITIONS */}
+      {/* MEALPULSE AI & VALUE PROPOSITIONS */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* For Donors */}
@@ -401,18 +401,18 @@ export const LandingPage: React.FC = () => {
               <h3 className="font-extrabold text-sm text-charcoal">For Commercial Food Donors</h3>
             </div>
             <p className="text-muted leading-relaxed">
-              Hotels, restaurants, marriage halls, and catering units can divert surplus in under 3 minutes with zero liability.
+              Hotels, marriage halls, college hostels, and caterers can forecast surplus before events start and redistribute with zero liability.
             </p>
             <ul className="space-y-1.5 text-[11px] text-charcoal font-medium">
               <li className="flex items-center gap-2">✓ <strong>FSSAI Thermal Safety Gate:</strong> Automated temperature logging and hazard warnings.</li>
-              <li className="flex items-center gap-2">✓ <strong>RescueTwin Forecasts:</strong> Pre-alert nearby volunteers before banquet buffets wrap.</li>
-              <li className="flex items-center gap-2">✓ <strong>CSR Impact Certificates:</strong> Official carbon and meal redistribution ledger.</li>
+              <li className="flex items-center gap-2">✓ <strong>MealPulse AI EventPulse:</strong> Pre-alert nearby volunteers before banquet buffets wrap.</li>
+              <li className="flex items-center gap-2">✓ <strong>HostelPulse Campus Engine:</strong> Daily dining mess surplus intelligence.</li>
             </ul>
             <Link
-              to="/donor/donate"
+              to="/mealpulse"
               className="inline-flex items-center gap-1.5 text-xs font-bold text-forest hover:underline pt-2"
             >
-              <span>Post surplus donation now</span>
+              <span>Explore MealPulse AI Centre</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
@@ -429,13 +429,13 @@ export const LandingPage: React.FC = () => {
             <ul className="space-y-1.5 text-[11px] text-charcoal font-medium">
               <li className="flex items-center gap-2">✓ <strong>FairShare Proportional Allocation:</strong> Never flooded with excess food or left hungry.</li>
               <li className="flex items-center gap-2">✓ <strong>Live Courier Tracking:</strong> View real-time OSRM navigation and arrival ETA.</li>
-              <li className="flex items-center gap-2">✓ <strong>Dual-OTP Verification:</strong> Confirm safe handover directly on the Impact Ledger.</li>
+              <li className="flex items-center gap-2">✓ <strong>LiveSync Multi-Client:</strong> Instant notifications across nearby shelters.</li>
             </ul>
             <Link
-              to="/rescuetwin"
+              to="/mealpulse"
               className="inline-flex items-center gap-1.5 text-xs font-bold text-forest hover:underline pt-2"
             >
-              <span>Explore RescueTwin AI Centre</span>
+              <span>Open MealPulse AI Engine</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>

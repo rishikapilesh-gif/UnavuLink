@@ -474,3 +474,162 @@ export interface AppNotification {
   is_read: boolean;
   created_at: string;
 }
+
+// ====================================================================
+// MEALPULSE AI TYPES (EVENTPULSE, HOSTELPULSE, LOCALRESCUE, LIVESYNC)
+// ====================================================================
+
+export type EventType = 
+  | 'Wedding'
+  | 'Birthday party'
+  | 'Engagement function'
+  | 'Reception'
+  | 'Corporate event'
+  | 'College celebration'
+  | 'Festival'
+  | 'Community gathering'
+  | 'Private party'
+  | 'Other';
+
+export type EventMealType = 'Breakfast' | 'Lunch' | 'Dinner' | 'Snacks';
+export type FoodPreparationArrangement = 'In-house' | 'Caterer' | 'External provider';
+export type EventPulseStatus = 
+  | 'registered' 
+  | 'surplus_predicted' 
+  | 'notified' 
+  | 'interests_received' 
+  | 'surplus_confirmed' 
+  | 'safety_verified'
+  | 'allocated' 
+  | 'in_rescue' 
+  | 'delivered'
+  | 'completed' 
+  | 'cancelled';
+
+export interface EventRegistration {
+  id: string;
+  organizer_id: string;
+  organizer_name: string;
+  organizer_phone: string;
+  event_name: string;
+  event_type: EventType;
+  event_date: string;
+  start_time: string;
+  expected_end_time: string;
+  serving_time: string;
+  location_name: string;
+  district: string;
+  city: string;
+  latitude: number;
+  longitude: number;
+  approx_guests: number;
+  planned_meals: number;
+  food_categories: string[];
+  meal_type: EventMealType;
+  prep_arrangement: FoodPreparationArrangement;
+  caterer_name?: string;
+  caterer_contact?: string;
+  expects_surplus: boolean;
+  notes?: string;
+  status: EventPulseStatus;
+  actual_surplus_portions?: number;
+  actual_surplus_kg?: number;
+  confirmed_at?: string;
+  created_at: string;
+}
+
+export interface EventSurplusPrediction {
+  eventId: string;
+  estimatedMealsRequired: number;
+  estimatedSurplusMin: number;
+  estimatedSurplusMax: number;
+  estimatedSurplusKg: number;
+  confidence: 'High' | 'Medium' | 'Low';
+  expectedAvailabilityTime: string;
+  influencingFactors: string[];
+  nearbyRecipientCandidates: {
+    id: string;
+    name: string;
+    type: string;
+    requirementPortions: number;
+    distanceKm: number;
+  }[];
+  generatedAt: string;
+}
+
+export interface EventInterestRegistration {
+  id: string;
+  eventId: string;
+  recipientId: string;
+  recipientName: string;
+  recipientType: string;
+  portionsNeeded: number;
+  contactPhone: string;
+  registeredAt: string;
+  notes?: string;
+}
+
+// HostelPulse Types
+export interface HostelProfile {
+  id: string;
+  institution_name: string;
+  hostel_name: string;
+  campus_location: string;
+  city: string;
+  latitude: number;
+  longitude: number;
+  resident_count: number;
+  mess_capacity: number;
+  daily_production_portions: number;
+  contact_person: string;
+  contact_phone: string;
+  food_categories: string[];
+  operating_hours: string;
+  created_at: string;
+}
+
+export interface HostelDailyMealPlan {
+  id: string;
+  hostel_id: string;
+  hostel_name: string;
+  date: string;
+  meal: EventMealType;
+  planned_meals: number;
+  actual_prepared?: number;
+  actual_served?: number;
+  actual_surplus?: number;
+  predicted_consumption: number;
+  predicted_surplus_min: number;
+  predicted_surplus_max: number;
+  confidence: 'High' | 'Medium' | 'Low';
+  factors: string[];
+  status: 'planned' | 'in_service' | 'surplus_confirmed' | 'safety_cleared' | 'rescued';
+  confirmed_at?: string;
+}
+
+// LiveSync Types
+export type LiveSyncEventType = 
+  | 'MISSION_CLAIMED' 
+  | 'EVENT_REGISTERED' 
+  | 'SURPLUS_CONFIRMED' 
+  | 'INTEREST_REGISTERED'
+  | 'HOSTEL_UPDATED'
+  | 'STATUS_CHANGE';
+
+export interface LiveSyncEvent {
+  id: string;
+  timestamp: string;
+  eventType: LiveSyncEventType;
+  payload: any;
+  summary: string;
+  originClientId: string;
+}
+
+export interface ClaimMissionResult {
+  success: boolean;
+  message: string;
+  claimedBy?: string;
+  claimedAt?: string;
+  error?: 'ALREADY_CLAIMED' | 'NOT_FOUND' | 'UNAUTHORIZED';
+}
+

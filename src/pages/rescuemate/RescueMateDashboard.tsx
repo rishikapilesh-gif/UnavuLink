@@ -27,6 +27,7 @@ export const RescueMateDashboard: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<'available' | 'active' | 'completed' | 'chat'>('available');
   const [actionNotice, setActionNotice] = useState<string | null>(null);
+  const [errorNotice, setErrorNotice] = useState<string | null>(null);
 
   const missions = store.getMissions();
   const rescuemates = store.getRescueMates();
@@ -46,22 +47,29 @@ export const RescueMateDashboard: React.FC = () => {
     (m.mission_status === 'delivered' || m.mission_status === 'completed')
   );
 
-  // Handle Accept Mission
+  // Handle Accept Mission with Atomic Claiming
   const handleAcceptMission = (missionId: string) => {
     if (!myRescueMateProfile) return;
 
-    const success = store.acceptMissionAsRescueMate(missionId, myRescueMateProfile);
-    if (success) {
+    const result = store.claimMissionAtomic(missionId, myRescueMateProfile);
+    if (result.success) {
       confetti({
         particleCount: 70,
         spread: 60,
         origin: { y: 0.6 }
       });
-      setActionNotice(`Mission accepted! You are now assigned to rescue this food batch. Navigate to pickup.`);
+      setActionNotice(result.message);
+      setErrorNotice(null);
       setTimeout(() => {
         setActiveTab('active');
         setActionNotice(null);
       }, 1500);
+    } else {
+      setErrorNotice(result.message);
+      setActionNotice(null);
+      setTimeout(() => {
+        setErrorNotice(null);
+      }, 5000);
     }
   };
 
@@ -159,6 +167,16 @@ export const RescueMateDashboard: React.FC = () => {
         <div className="p-4 bg-forest/10 border border-forest/30 text-forest rounded-card flex items-center gap-3 animate-in fade-in text-xs font-semibold">
           <CheckCircle2 className="w-5 h-5 shrink-0" />
           <span>{actionNotice}</span>
+        </div>
+      )}
+
+      {errorNotice && (
+        <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-card flex items-center gap-3 animate-in fade-in text-xs font-semibold">
+          <AlertCircle className="w-5 h-5 shrink-0 text-red-500" />
+          <div className="space-y-0.5">
+            <span className="font-bold block">Assignment Conflict Prevented</span>
+            <span>{errorNotice}</span>
+          </div>
         </div>
       )}
 

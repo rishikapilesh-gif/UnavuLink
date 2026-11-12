@@ -17,7 +17,12 @@ import {
   ChatConversation,
   ChatMessage,
   WhatsAppIntegrationConfig,
-  NotificationPreferences
+  NotificationPreferences,
+  EventRegistration,
+  EventSurplusPrediction,
+  EventInterestRegistration,
+  HostelProfile,
+  HostelDailyMealPlan
 } from '../types';
 
 export const INITIAL_PROFILES: UserProfile[] = [
@@ -926,3 +931,237 @@ export const INITIAL_NOTIFICATION_PREFERENCES: NotificationPreferences = {
   whatsapp_opt_in: false,
   whatsapp_phone: '+91 98422 10001'
 };
+
+// ====================================================================
+// MEALPULSE AI: EVENTPULSE & HOSTELPULSE INITIAL SEED DATA
+// ====================================================================
+
+export const INITIAL_EVENT_REGISTRATIONS: EventRegistration[] = [
+  {
+    id: 'evt-cbe-001',
+    organizer_id: 'usr-donor-1',
+    organizer_name: 'Senthil Nathan (Annapoorna Hospitality)',
+    organizer_phone: '+91 98422 20002',
+    event_name: 'Kavitha & Arvind Grand Wedding Reception',
+    event_type: 'Wedding',
+    event_date: '2026-11-15',
+    start_time: '18:30',
+    expected_end_time: '22:00',
+    serving_time: '19:30 - 21:00',
+    location_name: 'Padmavathi Ammal Kalyana Mandapam, Peelamedu',
+    district: 'Coimbatore',
+    city: 'Coimbatore',
+    latitude: 11.0267,
+    longitude: 76.9950,
+    approx_guests: 600,
+    planned_meals: 750,
+    food_categories: ['Cooked Meals', 'Bakery', 'Dairy'],
+    meal_type: 'Dinner',
+    prep_arrangement: 'External provider',
+    caterer_name: 'Annapoorna Royal Caterers',
+    caterer_contact: '+91 94430 11223',
+    expects_surplus: true,
+    notes: 'South Indian buffet with live dosa, poori counter and traditional sweet payasam. Stainless steel thermal urns provided.',
+    status: 'notified',
+    actual_surplus_portions: undefined,
+    actual_surplus_kg: undefined,
+    created_at: new Date(Date.now() - 3600000 * 24).toISOString()
+  },
+  {
+    id: 'evt-cbe-002',
+    organizer_id: 'usr-donor-2',
+    organizer_name: 'Vikram Sundaram (TIDEL Events)',
+    organizer_phone: '+91 98422 30003',
+    event_name: 'Tamil Nadu FinTech Conclave Dinner',
+    event_type: 'Corporate event',
+    event_date: '2026-11-14',
+    start_time: '19:00',
+    expected_end_time: '21:30',
+    serving_time: '20:00 - 21:15',
+    location_name: 'TIDEL Park Convention Centre, Civil Aerodrome Post',
+    district: 'Coimbatore',
+    city: 'Coimbatore',
+    latitude: 11.0289,
+    longitude: 77.0270,
+    approx_guests: 220,
+    planned_meals: 260,
+    food_categories: ['Cooked Meals', 'Bakery'],
+    meal_type: 'Dinner',
+    prep_arrangement: 'Caterer',
+    caterer_name: 'Le Meridien Hospitality Partner',
+    caterer_contact: '+91 98940 99887',
+    expects_surplus: true,
+    notes: 'Conference delegate executive buffet, variety rice, roti and paneer gravy.',
+    status: 'surplus_predicted',
+    created_at: new Date(Date.now() - 3600000 * 12).toISOString()
+  },
+  {
+    id: 'evt-cbe-003',
+    organizer_id: 'usr-donor-1',
+    organizer_name: 'Senthil Nathan',
+    organizer_phone: '+91 98422 20002',
+    event_name: 'Siva & Meena 50th Golden Jubilee Celebration',
+    event_type: 'Community gathering',
+    event_date: '2026-11-13',
+    start_time: '12:00',
+    expected_end_time: '15:00',
+    serving_time: '12:30 - 14:00',
+    location_name: 'Sri Krishna Community Hall, RS Puram',
+    district: 'Coimbatore',
+    city: 'Coimbatore',
+    latitude: 11.0112,
+    longitude: 76.9535,
+    approx_guests: 180,
+    planned_meals: 200,
+    food_categories: ['Cooked Meals'],
+    meal_type: 'Lunch',
+    prep_arrangement: 'In-house',
+    expects_surplus: true,
+    notes: 'Full traditional banana leaf lunch with sambar, rasam, kootu and curd rice.',
+    status: 'surplus_confirmed',
+    actual_surplus_portions: 35,
+    actual_surplus_kg: 14,
+    confirmed_at: new Date(Date.now() - 3600000 * 2).toISOString(),
+    created_at: new Date(Date.now() - 3600000 * 48).toISOString()
+  }
+];
+
+export const INITIAL_EVENT_INTERESTS: EventInterestRegistration[] = [
+  {
+    id: 'int-001',
+    eventId: 'evt-cbe-001',
+    recipientId: 'org-ngo-1',
+    recipientName: 'Anbalayam Children Shelter (Saibaba Colony)',
+    recipientType: 'Orphanage',
+    portionsNeeded: 40,
+    contactPhone: '+91 98422 30001',
+    registeredAt: new Date(Date.now() - 3600000 * 18).toISOString(),
+    notes: 'We have 42 resident children awaiting dinner. Can receive thermal vessels by 9:45 PM.'
+  },
+  {
+    id: 'int-002',
+    eventId: 'evt-cbe-001',
+    recipientId: 'org-ngo-2',
+    recipientName: 'Karunai Illam Destitute Elders Home (R.S. Puram)',
+    recipientType: 'Old Age Home',
+    portionsNeeded: 25,
+    contactPhone: '+91 98422 30002',
+    registeredAt: new Date(Date.now() - 3600000 * 16).toISOString(),
+    notes: 'Can safely accept soft food, rice and mild vegetarian gravies for 25 elderly residents.'
+  },
+  {
+    id: 'int-003',
+    eventId: 'evt-cbe-001',
+    recipientId: 'hub-cbe-001',
+    recipientName: 'Lions Community Feeding Centre (Gandhipuram)',
+    recipientType: 'Community Kitchen',
+    portionsNeeded: 30,
+    contactPhone: '+91 98422 60001',
+    registeredAt: new Date(Date.now() - 3600000 * 14).toISOString(),
+    notes: 'Walk-in night shelter visitors require around 30 meals.'
+  }
+];
+
+export const INITIAL_HOSTEL_PROFILES: HostelProfile[] = [
+  {
+    id: 'hst-cbe-001',
+    institution_name: 'Sri Eshwar College of Engineering',
+    hostel_name: 'Sri Eshwar Boys Hostel (Campus A & B)',
+    campus_location: 'Kondampatti Post, Vadasithur, Kinathukadavu',
+    city: 'Coimbatore',
+    latitude: 10.8278,
+    longitude: 77.0607,
+    resident_count: 850,
+    mess_capacity: 500,
+    daily_production_portions: 2200,
+    contact_person: 'Murugesan (Senior Mess Warden)',
+    contact_phone: '+91 94433 22110',
+    food_categories: ['Cooked Meals', 'Dairy', 'Bakery'],
+    operating_hours: '06:30 - 21:45',
+    created_at: new Date(Date.now() - 3600000 * 24 * 30).toISOString()
+  },
+  {
+    id: 'hst-cbe-002',
+    institution_name: 'PSG College of Technology',
+    hostel_name: 'PSG Tech Ladies Hostel Block 3',
+    campus_location: 'Avinashi Road, Peelamedu',
+    city: 'Coimbatore',
+    latitude: 11.0244,
+    longitude: 77.0028,
+    resident_count: 620,
+    mess_capacity: 400,
+    daily_production_portions: 1600,
+    contact_person: 'Revathi Krishnan (Hostel In-charge)',
+    contact_phone: '+91 98944 33221',
+    food_categories: ['Cooked Meals', 'Bakery'],
+    operating_hours: '07:00 - 21:30',
+    created_at: new Date(Date.now() - 3600000 * 24 * 60).toISOString()
+  }
+];
+
+export const INITIAL_HOSTEL_MEAL_PLANS: HostelDailyMealPlan[] = [
+  {
+    id: 'hmp-001',
+    hostel_id: 'hst-cbe-001',
+    hostel_name: 'Sri Eshwar Boys Hostel',
+    date: 'Today',
+    meal: 'Dinner',
+    planned_meals: 400,
+    predicted_consumption: 340,
+    predicted_surplus_min: 50,
+    predicted_surplus_max: 65,
+    confidence: 'Medium',
+    factors: [
+      'Friday evening student weekend departure pattern (-12% mess footfall)',
+      'Semester exam week concluded yesterday',
+      'Average historical Friday dinner waste: 58 meals'
+    ],
+    status: 'in_service'
+  },
+  {
+    id: 'hmp-002',
+    hostel_id: 'hst-cbe-001',
+    hostel_name: 'Sri Eshwar Boys Hostel',
+    date: 'Today',
+    meal: 'Lunch',
+    planned_meals: 450,
+    actual_prepared: 450,
+    actual_served: 412,
+    actual_surplus: 38,
+    predicted_consumption: 420,
+    predicted_surplus_min: 25,
+    predicted_surplus_max: 35,
+    confidence: 'High',
+    factors: ['Full campus attendance', 'Laboratory sessions running on schedule'],
+    status: 'rescued',
+    confirmed_at: '14:20'
+  },
+  {
+    id: 'hmp-003',
+    hostel_id: 'hst-cbe-001',
+    hostel_name: 'Sri Eshwar Boys Hostel',
+    date: 'Tomorrow',
+    meal: 'Breakfast',
+    planned_meals: 300,
+    predicted_consumption: 260,
+    predicted_surplus_min: 30,
+    predicted_surplus_max: 45,
+    confidence: 'High',
+    factors: ['Saturday morning late risers', '35% residents on weekend home pass'],
+    status: 'planned'
+  },
+  {
+    id: 'hmp-004',
+    hostel_id: 'hst-cbe-002',
+    hostel_name: 'PSG Tech Ladies Hostel Block 3',
+    date: 'Today',
+    meal: 'Dinner',
+    planned_meals: 380,
+    predicted_consumption: 350,
+    predicted_surplus_min: 25,
+    predicted_surplus_max: 35,
+    confidence: 'High',
+    factors: ['Normal weekday attendance', 'Chapati and dhal batch'],
+    status: 'in_service'
+  }
+];

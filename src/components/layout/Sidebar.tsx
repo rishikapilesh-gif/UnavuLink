@@ -40,7 +40,7 @@ export const Sidebar: React.FC = () => {
       case 'Admin':
         return [
           { to: '/admin', label: 'Command Centre', icon: LayoutDashboard },
-          { to: '/rescuetwin', label: 'RescueTwin™ AI Core', icon: Cpu, badge: 'AI' },
+          { to: '/mealpulse', label: 'MealPulse™ AI Core', icon: Cpu, badge: 'AI' },
           { to: '/admin/whatsapp', label: 'WhatsApp Meta API', icon: Sparkles },
           { to: '/admin/email', label: 'Email Delivery Logs', icon: Inbox, badge: 'Real' },
           { to: '/impact-ledger', label: 'Impact Ledger', icon: FileText },
@@ -55,17 +55,18 @@ export const Sidebar: React.FC = () => {
         return [
           { to: '/donor', label: 'Donor Dashboard', icon: LayoutDashboard },
           { to: '/donor/donate', label: 'Post Food Rescue', icon: PlusCircle, highlight: true },
+          { to: '/mealpulse', label: 'MealPulse™ AI Hub', icon: Sparkles, badge: 'Predict' },
           { to: '/donor/listings', label: 'My Listings', icon: UtensilsCrossed },
           { to: '/donor/requests', label: 'Donation Requests', icon: Inbox, badge: '2' },
           { to: '/tracking', label: 'Live OSRM Tracking', icon: Navigation },
           { to: '/messages', label: 'Coordination Chat', icon: Inbox },
-          { to: '/donor/predictive', label: 'Predictive Surplus', icon: Sparkles, badge: 'AI' },
           { to: '/impact-ledger', label: 'Impact Ledger', icon: FileText },
         ];
 
       case 'Acceptor':
         return [
           { to: '/acceptor', label: 'Acceptor Dashboard', icon: LayoutDashboard },
+          { to: '/mealpulse', label: 'MealPulse™ Alerts', icon: Sparkles, badge: 'New' },
           { to: '/acceptor/available', label: 'Available Food', icon: UtensilsCrossed },
           { to: '/acceptor/requests', label: 'My Requests', icon: Inbox },
           { to: '/tracking', label: 'Incoming Deliveries', icon: Navigation },
@@ -76,7 +77,7 @@ export const Sidebar: React.FC = () => {
       case 'NGO':
         return [
           { to: '/ngo', label: 'NGO Dashboard', icon: LayoutDashboard },
-          { to: '/rescuetwin', label: 'FairShare Allocation', icon: Cpu, badge: 'AI' },
+          { to: '/mealpulse', label: 'MealPulse™ AI Hub', icon: Cpu, badge: 'AI' },
           { to: '/ngo/available', label: 'Available Surplus', icon: UtensilsCrossed },
           { to: '/tracking', label: 'Active Missions', icon: Navigation },
           { to: '/messages', label: 'Rescue Coordination', icon: Inbox },

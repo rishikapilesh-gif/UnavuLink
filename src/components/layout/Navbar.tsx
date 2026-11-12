@@ -97,6 +97,17 @@ export const Navbar: React.FC = () => {
 
         {/* Right: City Location & Language & Download */}
         <div className="flex items-center gap-2 ml-auto">
+          {/* MealPulse AI Link & LiveSync Status */}
+          <Link
+            to="/mealpulse"
+            className="flex items-center gap-1.5 bg-forest/80 hover:bg-forest text-cream px-2.5 py-0.5 rounded-full text-xs font-bold transition-all border border-white/20"
+            title="MealPulse AI: Predict. Alert. Rescue."
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+            <span className="hidden sm:inline">MealPulse AI</span>
+            <span className="text-[10px] text-orange-warm font-mono">Live</span>
+          </Link>
+
           {/* Direct ZIP Download Button */}
           <a
             href="/unavulink-complete-project.zip"

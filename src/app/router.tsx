@@ -26,6 +26,7 @@ import { TrackingPage } from '../pages/rescue/TrackingPage';
 import { ImpactLedgerPage } from '../pages/public/ImpactLedgerPage';
 import { MessagesPage } from '../pages/chat/MessagesPage';
 import { RescueTwinPage } from '../pages/admin/RescueTwinPage';
+import { MealPulsePage } from '../pages/admin/MealPulsePage';
 import { RescueMateDashboard } from '../pages/rescuemate/RescueMateDashboard';
 import { WhatsAppIntegrationPage } from '../pages/admin/WhatsAppIntegrationPage';
 import { NotificationPreferencesPage } from '../pages/public/NotificationPreferencesPage';
@@ -161,7 +162,8 @@ export const AppRouter: React.FC = () => {
       <Route path="/scan" element={<ScanReportPage />} />
       <Route path="/messages" element={<DashboardLayout><MessagesPage /></DashboardLayout>} />
       <Route path="/messages/:conversationId" element={<DashboardLayout><MessagesPage /></DashboardLayout>} />
-      <Route path="/rescuetwin" element={<DashboardLayout><RescueTwinPage /></DashboardLayout>} />
+      <Route path="/mealpulse" element={<DashboardLayout><MealPulsePage /></DashboardLayout>} />
+      <Route path="/rescuetwin" element={<DashboardLayout><MealPulsePage /></DashboardLayout>} />
       <Route path="/rescuemate" element={<DashboardLayout><RescueMateDashboard /></DashboardLayout>} />
       <Route path="/admin/whatsapp" element={<DashboardLayout><WhatsAppIntegrationPage /></DashboardLayout>} />
       <Route path="/admin/email" element={<DashboardLayout><EmailIntegrationPage /></DashboardLayout>} />

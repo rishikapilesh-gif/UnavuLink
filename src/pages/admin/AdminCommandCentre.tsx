@@ -107,11 +107,11 @@ export const AdminCommandCentre: React.FC = () => {
         {/* Action Buttons */}
         <div className="flex items-center gap-2 flex-wrap">
           <Link
-            to="/rescuetwin"
+            to="/mealpulse"
             className="px-3.5 py-2 bg-forest hover:bg-forest-dark text-white rounded-subtle font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all"
           >
             <Cpu className="w-4 h-4 text-orange-warm" />
-            <span>RescueTwin AI</span>
+            <span>MealPulse AI</span>
           </Link>
 
           <Link

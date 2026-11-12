@@ -66,14 +66,25 @@ export const DonorDashboard: React.FC = () => {
           </p>
         </div>
 
-        {/* Large Primary Action Button */}
-        <Link
-          to="/donor/donate"
-          className="px-6 py-4 bg-forest hover:bg-forest-dark text-white rounded-2xl font-extrabold text-sm shadow-md transition-all flex items-center justify-center gap-2 self-start md:self-auto shrink-0 group"
-        >
-          <PlusCircle className="w-5 h-5 text-orange-warm group-hover:rotate-90 transition-transform" />
-          <span>+ Post New Food Donation</span>
-        </Link>
+        {/* Action Buttons */}
+        <div className="flex items-center gap-3 flex-wrap">
+          <Link
+            to="/mealpulse"
+            className="px-4 py-3 bg-cream hover:bg-forest/10 text-forest border border-forest/30 rounded-2xl font-bold text-xs shadow-xs transition-all flex items-center justify-center gap-1.5"
+            title="Event surplus & hostel wastage predictive intelligence"
+          >
+            <Sparkles className="w-4 h-4 text-orange-warm" />
+            <span>MealPulse™ AI (Events & Hostels)</span>
+          </Link>
+
+          <Link
+            to="/donor/donate"
+            className="px-6 py-4 bg-forest hover:bg-forest-dark text-white rounded-2xl font-extrabold text-sm shadow-md transition-all flex items-center justify-center gap-2 self-start md:self-auto shrink-0 group"
+          >
+            <PlusCircle className="w-5 h-5 text-orange-warm group-hover:rotate-90 transition-transform" />
+            <span>+ Post New Food Donation</span>
+          </Link>
+        </div>
       </div>
 
       {approvalNotice && (
