@@ -62,7 +62,7 @@ export const AcceptorDashboard: React.FC = () => {
           }`}
         >
           <UtensilsCrossed className="w-4 h-4" />
-          <span>Available Surplus ({listings.length})</span>
+          <span>Available Food from Donors ({listings.length})</span>
         </button>
 
         <button
@@ -74,7 +74,7 @@ export const AcceptorDashboard: React.FC = () => {
           }`}
         >
           <Inbox className="w-4 h-4 text-orange-warm" />
-          <span>My Requests ({requests.length})</span>
+          <span>Intake Allocations & Requests ({requests.length})</span>
         </button>
 
         <button
@@ -105,41 +105,90 @@ export const AcceptorDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* TAB 2: MY REQUESTS */}
+      {/* TAB 2: MY REQUESTS & INTAKE DECISIONS */}
       {activeTab === 'requests' && (
         <div className="bg-white rounded-card p-6 border border-sage shadow-soft space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="font-extrabold text-base text-charcoal">My Food Allocation Requests</h3>
-            <span className="text-xs text-muted">Real-time status updates</span>
+            <div>
+              <h3 className="font-extrabold text-base text-charcoal">Food Intake & Allocation Queue</h3>
+              <p className="text-xs text-muted">Review donor-shared food batches: Accept for intake or decline for other shelters.</p>
+            </div>
+            <span className="text-xs font-bold text-forest bg-forest/10 px-2.5 py-1 rounded-full">
+              Backend Interconnected
+            </span>
           </div>
 
           <div className="space-y-3">
-            {requests.map(req => (
-              <div
-                key={req.id}
-                className="p-4 bg-cream rounded-subtle border border-sage flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
-              >
-                <div>
-                  <span className="font-bold text-charcoal text-sm">{req.organization_name}</span>
-                  <p className="text-muted">
-                    Requested <strong>{req.requested_quantity} kg</strong>
-                  </p>
-                </div>
+            {requests.map(req => {
+              const isApproved = req.request_status === 'approved';
+              const isRejected = req.request_status === 'rejected';
 
-                <div>
-                  {req.request_status === 'approved' ? (
-                    <span className="bg-forest/15 text-forest font-extrabold px-3 py-1 rounded-full flex items-center gap-1.5">
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      <span>Approved • Volunteer Dispatched</span>
-                    </span>
-                  ) : (
-                    <span className="bg-orange-warm/15 text-orange-warm font-semibold px-3 py-1 rounded-full">
-                      Awaiting Donor Approval
-                    </span>
-                  )}
+              return (
+                <div
+                  key={req.id}
+                  className="p-4 bg-cream rounded-subtle border border-sage flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs"
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-charcoal text-sm">{req.organization_name}</span>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white border border-sage">
+                        Batch: {req.food_listing_id}
+                      </span>
+                    </div>
+                    <p className="text-muted">
+                      Allocated Quantity: <strong className="text-charcoal">{req.requested_quantity} kg</strong>
+                    </p>
+                    {req.donor_response_notes && (
+                      <p className="text-[11px] text-forest italic">
+                        Donor note: "{req.donor_response_notes}"
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    {isApproved ? (
+                      <span className="bg-forest/15 text-forest font-extrabold px-3 py-1 rounded-full flex items-center gap-1.5">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span>Accepted • Delivery En Route</span>
+                      </span>
+                    ) : isRejected ? (
+                      <span className="bg-cherry/10 text-cherry font-bold px-3 py-1 rounded-full">
+                        Declined / Passed to other shelter
+                      </span>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            store.updateRequest({
+                              ...req,
+                              request_status: 'approved',
+                              approved_quantity: req.requested_quantity
+                            });
+                          }}
+                          className="px-3.5 py-1.5 bg-forest hover:bg-forest-dark text-white rounded-subtle font-extrabold shadow-2xs transition-colors"
+                        >
+                          Accept Intake
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            store.updateRequest({
+                              ...req,
+                              request_status: 'rejected',
+                              rejection_reason: 'Shelter storage full'
+                            });
+                          }}
+                          className="px-3 py-1.5 border border-sage bg-white hover:bg-cream text-charcoal rounded-subtle font-semibold transition-colors"
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}

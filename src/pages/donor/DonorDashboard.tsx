@@ -156,8 +156,8 @@ export const DonorDashboard: React.FC = () => {
               <FoodCard
                 key={listing.id}
                 listing={listing}
+                hideRequestButton={true}
                 onPassportClick={(l) => setSelectedPassportListing(l)}
-                onRequestClick={() => setActiveTab('requests')}
               />
             ))}
           </div>

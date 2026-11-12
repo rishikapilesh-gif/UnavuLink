@@ -17,13 +17,15 @@ interface FoodCardProps {
   onRequestClick?: (listing: FoodListing) => void;
   onPassportClick?: (listing: FoodListing) => void;
   onCardClick?: (listing: FoodListing) => void;
+  hideRequestButton?: boolean;
 }
 
 export const FoodCard: React.FC<FoodCardProps> = ({
   listing,
   onRequestClick,
   onPassportClick,
-  onCardClick
+  onCardClick,
+  hideRequestButton = false
 }) => {
   const isVeg = listing.dietary_category !== 'Non-Vegetarian';
   const isEmergency = listing.is_emergency;
@@ -173,22 +175,28 @@ export const FoodCard: React.FC<FoodCardProps> = ({
           <span>Passport</span>
         </button>
 
-        <button
-          type="button"
-          disabled={isFrozen || isExpired}
-          onClick={(e) => {
-            e.stopPropagation();
-            onRequestClick && onRequestClick(listing);
-          }}
-          className={`px-4 py-2 rounded-subtle font-bold text-xs transition-all flex items-center gap-1.5 shadow-xs ${
-            isFrozen || isExpired
-              ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-              : 'bg-forest hover:bg-forest-dark text-white'
-          }`}
-        >
-          <span>Request Food</span>
-          <ArrowRight className="w-3.5 h-3.5" />
-        </button>
+        {!hideRequestButton ? (
+          <button
+            type="button"
+            disabled={isFrozen || isExpired}
+            onClick={(e) => {
+              e.stopPropagation();
+              onRequestClick && onRequestClick(listing);
+            }}
+            className={`px-4 py-2 rounded-subtle font-bold text-xs transition-all flex items-center gap-1.5 shadow-xs ${
+              isFrozen || isExpired
+                ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                : 'bg-forest hover:bg-forest-dark text-white'
+            }`}
+          >
+            <span>Request Food</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        ) : (
+          <span className="text-[10px] font-bold text-forest bg-forest/10 px-2.5 py-1 rounded-full">
+            Active Donation Batch
+          </span>
+        )}
       </div>
     </div>
   );

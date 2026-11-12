@@ -31,6 +31,16 @@ export const Navbar: React.FC = () => {
 
   const rolesList: UserRole[] = ['Admin', 'Donor', 'Acceptor', 'NGO', 'Common People'];
 
+  // 6 Primary Navigation Personas
+  const rolePortals = [
+    { label: 'Admin', path: '/admin', loginPath: '/login/admin', role: 'Admin' },
+    { label: 'Donor', path: '/donor', loginPath: '/login/donor', role: 'Donor' },
+    { label: 'NGO', path: '/ngo', loginPath: '/login/ngo', role: 'NGO' },
+    { label: 'Acceptor', path: '/acceptor', loginPath: '/login/acceptor', role: 'Acceptor' },
+    { label: 'Volunteer', path: '/rescuemate', loginPath: '/login/volunteer', role: 'Common People', isVolunteer: true },
+    { label: 'Public', path: '/', loginPath: '/login/public', role: 'Common People' },
+  ];
+
   const getDashboardPath = () => {
     switch (role) {
       case 'Admin': return '/admin';
@@ -44,86 +54,65 @@ export const Navbar: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-[500] bg-white/95 backdrop-blur-md border-b border-sage shadow-xs">
-      {/* Top Swiggy-Style Location & Hackathon Bar */}
-      <div className="bg-charcoal text-cream text-[11px] px-4 py-1.5 flex flex-wrap items-center justify-between gap-2">
-        {/* Location Selector Pill & Mode Indicator */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setLocationModalOpen(true)}
-            className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white px-2.5 py-0.5 rounded-full transition-colors text-xs font-semibold"
-            title="Change discovery location"
-          >
-            <MapPin className="w-3.5 h-3.5 text-orange-warm" />
-            <span>Discovering near <strong className="text-white underline">{currentCity}</strong></span>
-            <ChevronDown className="w-3 h-3 text-sage" />
-          </button>
+      {/* Top Universal Role Taskbar */}
+      <div className="bg-charcoal text-cream text-[11px] px-3 sm:px-6 py-2 flex flex-wrap items-center justify-between gap-3 border-b border-white/10">
+        
+        {/* Left: Role Navigation Buttons (Admin, Donor, NGO, Acceptor, Volunteer, Public) */}
+        <div className="flex items-center flex-wrap gap-1.5">
+          <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted mr-1 hidden sm:inline">
+            Role Portals:
+          </span>
+          {rolePortals.map((portal) => {
+            const isCurrent = 
+              (portal.label === 'Volunteer' && user?.is_volunteer) ||
+              (portal.label === 'Public' && role === 'Common People' && !user?.is_volunteer) ||
+              (portal.label === role);
 
-          {/* Environment Mode Switcher */}
-          <button
-            onClick={toggleEnvironmentMode}
-            className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-extrabold transition-all border ${
-              environmentMode === 'virtual_world'
-                ? 'bg-status-success/20 text-green-300 border-status-success/40 hover:bg-status-success/30'
-                : 'bg-blue-900/40 text-blue-200 border-blue-500/50 hover:bg-blue-900/60'
-            }`}
-            title="Click to toggle between Virtual World (Demo sandbox) and Live Supabase Mode"
-          >
-            <span className={`w-2 h-2 rounded-full ${environmentMode === 'virtual_world' ? 'bg-green-400 animate-pulse' : 'bg-blue-400'}`} />
-            <span>{environmentMode === 'virtual_world' ? 'Virtual World (Demo Sandbox)' : 'Real Mode (Supabase)'}</span>
-          </button>
+            return (
+              <div key={portal.label} className="inline-flex items-center rounded-full bg-white/10 p-0.5 border border-white/15">
+                <Link
+                  to={user ? portal.path : portal.loginPath}
+                  className={`px-2.5 py-0.5 rounded-full text-xs font-bold transition-all flex items-center gap-1 ${
+                    isCurrent
+                      ? 'bg-forest text-white shadow-2xs'
+                      : 'text-cream hover:bg-white/15'
+                  }`}
+                  title={`Open ${portal.label} Portal`}
+                >
+                  <span>{portal.label}</span>
+                  {isCurrent && <span className="w-1.5 h-1.5 rounded-full bg-orange-warm animate-pulse" />}
+                </Link>
+                <Link
+                  to={portal.loginPath}
+                  className="px-1.5 py-0.5 text-[10px] text-muted hover:text-orange-warm transition-colors"
+                  title={`Dedicated ${portal.label} Login Page`}
+                >
+                  Sign-in
+                </Link>
+              </div>
+            );
+          })}
         </div>
 
-        {/* 1-Click Role Switcher */}
-        <div className="flex items-center gap-2">
-          <span className="text-sage hidden sm:inline">Active Role:</span>
-          <div className="relative">
-            <button
-              onClick={() => setRoleDropdownOpen(!roleDropdownOpen)}
-              className="bg-forest text-white font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1.5 transition-all text-xs shadow-2xs"
-            >
-              <span>{role}</span>
-              <ChevronDown className="w-3 h-3 text-orange-warm" />
-            </button>
-
-            {roleDropdownOpen && (
-              <div className="absolute right-0 mt-1 w-52 bg-white text-charcoal rounded-subtle shadow-lift border border-sage py-1.5 z-[9999]">
-                <div className="px-3 py-1.5 border-b border-sage/50 text-[10px] font-bold uppercase tracking-wider text-muted">
-                  Switch Persona (Hackathon Test)
-                </div>
-                {rolesList.map(r => (
-                  <button
-                    key={r}
-                    onClick={() => {
-                      switchDemoRole(r);
-                      setRoleDropdownOpen(false);
-                      switch (r) {
-                        case 'Admin': navigate('/admin'); break;
-                        case 'Donor': navigate('/donor'); break;
-                        case 'Acceptor': navigate('/acceptor'); break;
-                        case 'NGO': navigate('/ngo'); break;
-                        case 'Common People': navigate('/community'); break;
-                      }
-                    }}
-                    className={`w-full text-left px-3 py-1.5 text-xs flex items-center justify-between hover:bg-cream transition-colors ${
-                      role === r ? 'font-bold text-forest bg-forest/10' : ''
-                    }`}
-                  >
-                    <span>{r}</span>
-                    {role === r && <span className="w-2 h-2 rounded-full bg-forest" />}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+        {/* Right: City Location & Language */}
+        <div className="flex items-center gap-2 ml-auto">
+          <button
+            onClick={() => setLocationModalOpen(true)}
+            className="flex items-center gap-1 bg-white/10 hover:bg-white/20 text-white px-2 py-0.5 rounded-full text-xs font-semibold"
+          >
+            <MapPin className="w-3 h-3 text-orange-warm" />
+            <span className="truncate max-w-[100px] sm:max-w-none">{currentCity}</span>
+            <ChevronDown className="w-2.5 h-2.5 text-sage" />
+          </button>
 
           {/* Language Toggle */}
           <button
             onClick={() => setLanguage(language === 'en' ? 'ta' : 'en')}
-            className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-medium ml-1"
+            className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-medium"
             title="Toggle Language"
           >
             <Globe className="w-3 h-3 text-orange-warm" />
-            <span>{language === 'en' ? 'தமிழ்' : 'English'}</span>
+            <span>{language === 'en' ? 'தமிழ்' : 'EN'}</span>
           </button>
         </div>
       </div>
