@@ -29,6 +29,7 @@ export const DonorDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'listings' | 'requests' | 'tracking'>('listings');
   const [selectedPassportListing, setSelectedPassportListing] = useState<FoodListing | null>(null);
   const [incidentBatchId, setIncidentBatchId] = useState<string | null>(null);
+  const [approvalNotice, setApprovalNotice] = useState<string | null>(null);
 
   const listings = store.getListings().filter(l => l.donor_id === user?.id || l.donor_id === 'usr-donor-1');
   const requests = store.getRequests();
@@ -42,7 +43,10 @@ export const DonorDashboard: React.FC = () => {
       spread: 60,
       origin: { y: 0.6 }
     });
-    alert(`Request approved! Rescue Mission ${mission.batch_id} created with Pickup OTP: ${mission.pickup_otp}`);
+    setApprovalNotice(`Request for ${mission.food_name} approved! Rescue Mission ${mission.batch_id} created with Pickup OTP: ${mission.pickup_otp}. Redirecting to live tracking...`);
+    setTimeout(() => {
+      setActiveTab('tracking');
+    }, 1200);
   };
 
   return (
@@ -71,6 +75,13 @@ export const DonorDashboard: React.FC = () => {
           <span>+ Post New Food Donation</span>
         </Link>
       </div>
+
+      {approvalNotice && (
+        <div className="p-4 bg-forest/10 border border-forest/30 text-forest rounded-card flex items-center gap-3 animate-in fade-in">
+          <CheckCircle2 className="w-5 h-5 shrink-0" />
+          <span className="font-semibold text-xs">{approvalNotice}</span>
+        </div>
+      )}
 
       {/* Quick Visual Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

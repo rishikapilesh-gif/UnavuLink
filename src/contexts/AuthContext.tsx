@@ -6,6 +6,8 @@ interface AuthContextType {
   user: UserProfile | null;
   role: UserRole;
   isVolunteerApproved: boolean;
+  environmentMode: 'real' | 'virtual_world';
+  toggleEnvironmentMode: () => void;
   login: (email: string, role?: UserRole) => boolean;
   register: (profileData: Partial<UserProfile>) => void;
   logout: () => void;
@@ -25,6 +27,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Default to Donor or Admin for immediate demo readiness
     return profiles.find(p => p.role === 'Admin') || profiles[0];
   });
+
+  const [environmentMode, setEnvironmentModeState] = useState<'real' | 'virtual_world'>(
+    store.getEnvironmentMode()
+  );
+
+  const toggleEnvironmentMode = () => {
+    const nextMode = environmentMode === 'virtual_world' ? 'real' : 'virtual_world';
+    store.setEnvironmentMode(nextMode);
+    setEnvironmentModeState(nextMode);
+  };
 
   const role: UserRole = user?.role || 'Common People';
   const isVolunteerApproved = Boolean(user?.is_volunteer && user?.volunteer_approved);
@@ -95,6 +107,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user,
         role,
         isVolunteerApproved,
+        environmentMode,
+        toggleEnvironmentMode,
         login,
         register,
         logout,

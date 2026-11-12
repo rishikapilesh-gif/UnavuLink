@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
-  const { user, role, switchDemoRole, logout } = useAuth();
+  const { user, role, switchDemoRole, logout, environmentMode, toggleEnvironmentMode } = useAuth();
   const { language, setLanguage, t } = useLanguage();
   const navigate = useNavigate();
 
@@ -46,7 +46,7 @@ export const Navbar: React.FC = () => {
     <header className="sticky top-0 z-[500] bg-white/95 backdrop-blur-md border-b border-sage shadow-xs">
       {/* Top Swiggy-Style Location & Hackathon Bar */}
       <div className="bg-charcoal text-cream text-[11px] px-4 py-1.5 flex flex-wrap items-center justify-between gap-2">
-        {/* Location Selector Pill */}
+        {/* Location Selector Pill & Mode Indicator */}
         <div className="flex items-center gap-2">
           <button
             onClick={() => setLocationModalOpen(true)}
@@ -56,6 +56,20 @@ export const Navbar: React.FC = () => {
             <MapPin className="w-3.5 h-3.5 text-orange-warm" />
             <span>Discovering near <strong className="text-white underline">{currentCity}</strong></span>
             <ChevronDown className="w-3 h-3 text-sage" />
+          </button>
+
+          {/* Environment Mode Switcher */}
+          <button
+            onClick={toggleEnvironmentMode}
+            className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-extrabold transition-all border ${
+              environmentMode === 'virtual_world'
+                ? 'bg-status-success/20 text-green-300 border-status-success/40 hover:bg-status-success/30'
+                : 'bg-blue-900/40 text-blue-200 border-blue-500/50 hover:bg-blue-900/60'
+            }`}
+            title="Click to toggle between Virtual World (Demo sandbox) and Live Supabase Mode"
+          >
+            <span className={`w-2 h-2 rounded-full ${environmentMode === 'virtual_world' ? 'bg-green-400 animate-pulse' : 'bg-blue-400'}`} />
+            <span>{environmentMode === 'virtual_world' ? 'Virtual World (Demo Sandbox)' : 'Real Mode (Supabase)'}</span>
           </button>
         </div>
 
@@ -114,6 +128,16 @@ export const Navbar: React.FC = () => {
         </div>
       </div>
 
+      {/* Virtual World Demo Warning / Informational Banner */}
+      {environmentMode === 'virtual_world' && (
+        <div className="bg-forest-dark/95 text-cream text-[11px] px-4 py-1 flex items-center justify-center gap-2 border-b border-forest/30">
+          <Sparkles className="w-3.5 h-3.5 text-orange-warm shrink-0" />
+          <span>
+            <strong>Virtual World Demo Mode Active:</strong> Safe sandbox environment for demonstrating end-to-end food rescue, FairShare matching & OTP handovers without touching live databases.
+          </span>
+        </div>
+      )}
+
       {/* Main Navbar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
         {/* Brand Logo */}
@@ -144,6 +168,10 @@ export const Navbar: React.FC = () => {
           <Link to="/map" className="hover:text-forest transition-colors flex items-center gap-1">
             <MapPin className="w-3.5 h-3.5 text-orange-warm" />
             <span>Food Map</span>
+          </Link>
+          <Link to="/tracking" className="hover:text-forest transition-colors flex items-center gap-1 text-forest">
+            <Truck className="w-3.5 h-3.5 text-orange-warm animate-pulse" />
+            <span>Live Tracking</span>
           </Link>
           <Link to="/impact" className="hover:text-forest transition-colors">
             {t('nav.liveImpact')}
@@ -208,6 +236,9 @@ export const Navbar: React.FC = () => {
           </Link>
           <Link to="/map" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-charcoal hover:text-forest">
             Food Map
+          </Link>
+          <Link to="/tracking" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-forest font-bold">
+            Live Rescue Tracking
           </Link>
           <Link to="/impact" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-charcoal hover:text-forest">
             Live Impact Metrics

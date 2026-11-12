@@ -66,6 +66,15 @@ class UnavuLinkStore {
     }
   }
 
+  // --- ENVIRONMENT MODE (REAL SUPABASE VS VIRTUAL WORLD DEMO) ---
+  getEnvironmentMode(): 'real' | 'virtual_world' {
+    return this.getStorage('env_mode', 'virtual_world');
+  }
+
+  setEnvironmentMode(mode: 'real' | 'virtual_world'): void {
+    this.setStorage('env_mode', mode);
+  }
+
   // --- CURRENT LOCATION CONTEXT ---
   getSelectedCity(): string {
     return this.getStorage('selected_city', 'Coimbatore');

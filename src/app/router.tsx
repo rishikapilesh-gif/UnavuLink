@@ -7,6 +7,7 @@ import { AboutPage } from '../pages/public/AboutPage';
 import { LoginPage } from '../pages/public/LoginPage';
 import { RegisterPage } from '../pages/public/RegisterPage';
 import { ScanReportPage } from '../pages/public/ScanReportPage';
+import { TrackingPage } from '../pages/rescue/TrackingPage';
 
 // Role Dashboards
 import { AdminCommandCentre } from '../pages/admin/AdminCommandCentre';
@@ -39,6 +40,8 @@ export const AppRouter: React.FC = () => {
       {/* Public Pages */}
       <Route path="/" element={<LandingPage />} />
       <Route path="/map" element={<CommunityMapPage />} />
+      <Route path="/tracking" element={<TrackingPage />} />
+      <Route path="/tracking/:missionId" element={<TrackingPage />} />
       <Route path="/impact" element={<ImpactPage />} />
       <Route path="/about" element={<AboutPage />} />
       <Route path="/login" element={<LoginPage />} />

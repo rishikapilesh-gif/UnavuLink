@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import { RescueMission, MissionStatus } from '../../types';
 import { store } from '../../services/store';
 import { OtpModal } from '../common/OtpModal';
@@ -13,7 +15,9 @@ import {
   Navigation, 
   AlertTriangle,
   RotateCcw,
-  Sparkles
+  Sparkles,
+  Play,
+  Pause
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -34,6 +38,15 @@ const MILESTONES: { status: MissionStatus; label: string; description: string }[
 export const LiveTrackingView: React.FC<LiveTrackingViewProps> = ({ mission, onUpdate }) => {
   const [activeOtpStage, setActiveOtpStage] = useState<'pickup' | 'delivery' | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [isSimulating, setIsSimulating] = useState(false);
+  const [simProgress, setSimProgress] = useState(35); // default 35% in transit
+  const [etaRemaining, setEtaRemaining] = useState(mission.estimated_duration_mins || 15);
+
+  const mapRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<L.Map | null>(null);
+  const vehicleMarkerRef = useRef<L.Marker | null>(null);
+  const routePolylineRef = useRef<L.Polyline | null>(null);
+  const routePointsRef = useRef<[number, number][]>([]);
 
   // Determine current active step index
   const getStepIndex = (status: MissionStatus) => {
@@ -52,6 +65,152 @@ export const LiveTrackingView: React.FC<LiveTrackingViewProps> = ({ mission, onU
   };
 
   const currentStep = getStepIndex(mission.mission_status);
+
+  // Initialize mini Leaflet route map with OSRM routing
+  useEffect(() => {
+    if (!mapRef.current) return;
+    if (mapInstanceRef.current) return;
+
+    const pLat = mission.pickup_lat || 11.0168;
+    const pLng = mission.pickup_lng || 76.9558;
+    const dLat = mission.delivery_lat || 11.0264;
+    const dLng = mission.delivery_lng || 76.9421;
+
+    const map = L.map(mapRef.current, {
+      center: [(pLat + dLat) / 2, (pLng + dLng) / 2],
+      zoom: 13,
+      zoomControl: false,
+      attributionControl: false
+    });
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18
+    }).addTo(map);
+
+    mapInstanceRef.current = map;
+
+    // Custom icons
+    const donorIcon = L.divIcon({
+      className: 'donor-pin',
+      html: `<div style="background:#2E6B3F;color:white;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 8px rgba(0,0,0,0.3);border:2px solid white;font-size:12px;">🍲</div>`,
+      iconSize: [28, 28],
+      iconAnchor: [14, 14]
+    });
+
+    const dropIcon = L.divIcon({
+      className: 'drop-pin',
+      html: `<div style="background:#1E40AF;color:white;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 8px rgba(0,0,0,0.3);border:2px solid white;font-size:12px;">🏠</div>`,
+      iconSize: [28, 28],
+      iconAnchor: [14, 14]
+    });
+
+    const scooterIcon = L.divIcon({
+      className: 'scooter-pin',
+      html: `<div style="background:#F28C28;color:white;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(242,140,40,0.6);border:2px solid white;font-size:15px;animation:pulse 1.5s infinite;">🛵</div>`,
+      iconSize: [34, 34],
+      iconAnchor: [17, 17]
+    });
+
+    // Add pickup and drop markers
+    L.marker([pLat, pLng], { icon: donorIcon })
+      .bindPopup(`<b>Pickup:</b> ${mission.pickup_address}`)
+      .addTo(map);
+
+    L.marker([dLat, dLng], { icon: dropIcon })
+      .bindPopup(`<b>Drop:</b> ${mission.delivery_address}`)
+      .addTo(map);
+
+    // Initial vehicle position
+    const vLat = pLat + (dLat - pLat) * (simProgress / 100);
+    const vLng = pLng + (dLng - pLng) * (simProgress / 100);
+    const vMarker = L.marker([vLat, vLng], { icon: scooterIcon }).addTo(map);
+    vehicleMarkerRef.current = vMarker;
+
+    // Fetch real road polyline from OSRM public API with fallback
+    const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${pLng},${pLat};${dLng},${dLat}?overview=full&geometries=geojson`;
+
+    fetch(osrmUrl)
+      .then(res => res.json())
+      .then(data => {
+        if (data.routes && data.routes[0]) {
+          const coords = data.routes[0].geometry.coordinates.map((c: [number, number]) => [c[1], c[0]] as [number, number]);
+          routePointsRef.current = coords;
+          const polyline = L.polyline(coords, {
+            color: '#2E6B3F',
+            weight: 5,
+            opacity: 0.85,
+            dashArray: '8, 8'
+          }).addTo(map);
+          routePolylineRef.current = polyline;
+          map.fitBounds(polyline.getBounds(), { padding: [40, 40] });
+        } else {
+          throw new Error('OSRM empty');
+        }
+      })
+      .catch(() => {
+        // Fallback straight interpolated line
+        const fallbackCoords: [number, number][] = [
+          [pLat, pLng],
+          [pLat + (dLat - pLat) * 0.4, pLng + (dLng - pLng) * 0.35 + 0.005],
+          [pLat + (dLat - pLat) * 0.7, pLng + (dLng - pLng) * 0.75 - 0.003],
+          [dLat, dLng]
+        ];
+        routePointsRef.current = fallbackCoords;
+        const polyline = L.polyline(fallbackCoords, {
+          color: '#2E6B3F',
+          weight: 5,
+          opacity: 0.85
+        }).addTo(map);
+        routePolylineRef.current = polyline;
+        map.fitBounds(polyline.getBounds(), { padding: [40, 40] });
+      });
+
+    return () => {
+      map.remove();
+      mapInstanceRef.current = null;
+    };
+  }, [mission]);
+
+  // Handle live simulated motion along the route
+  useEffect(() => {
+    if (!isSimulating) return;
+
+    const interval = setInterval(() => {
+      setSimProgress(prev => {
+        if (prev >= 95) {
+          setIsSimulating(false);
+          setEtaRemaining(1);
+          return 98;
+        }
+        const next = prev + 5;
+        setEtaRemaining(Math.max(1, Math.round((100 - next) * 0.2)));
+
+        // Update scooter marker on map
+        if (vehicleMarkerRef.current) {
+          const points = routePointsRef.current;
+          if (points.length > 0) {
+            const index = Math.min(
+              points.length - 1,
+              Math.floor((next / 100) * points.length)
+            );
+            vehicleMarkerRef.current.setLatLng(points[index]);
+          } else {
+            const pLat = mission.pickup_lat || 11.0168;
+            const pLng = mission.pickup_lng || 76.9558;
+            const dLat = mission.delivery_lat || 11.0264;
+            const dLng = mission.delivery_lng || 76.9421;
+            const lat = pLat + (dLat - pLat) * (next / 100);
+            const lng = pLng + (dLng - pLng) * (next / 100);
+            vehicleMarkerRef.current.setLatLng([lat, lng]);
+          }
+        }
+
+        return next;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isSimulating, mission]);
 
   // Friendly status headline
   const getFriendlyStatus = () => {
@@ -197,6 +356,52 @@ export const LiveTrackingView: React.FC<LiveTrackingViewProps> = ({ mission, onU
               <span>Enter Delivery OTP</span>
             </button>
           )}
+        </div>
+      </div>
+
+      {/* Interactive Live OSRM Route Map with Real Vehicle Simulation */}
+      <div className="space-y-2 border border-sage rounded-subtle p-3 bg-white">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Navigation className="w-4 h-4 text-forest" />
+            <h4 className="font-bold text-charcoal text-xs">Live OSRM Transit Route</h4>
+            <span className="text-[10px] text-muted">• Courier is {simProgress}% along route</span>
+          </div>
+
+          <button
+            onClick={() => setIsSimulating(!isSimulating)}
+            className={`px-3 py-1.5 rounded-full font-bold text-xs flex items-center gap-1.5 transition-all shadow-xs ${
+              isSimulating
+                ? 'bg-status-danger text-white hover:bg-status-danger/90'
+                : 'bg-forest text-white hover:bg-forest-dark'
+            }`}
+          >
+            {isSimulating ? (
+              <>
+                <Pause className="w-3.5 h-3.5 fill-current" />
+                <span>Pause Motion</span>
+              </>
+            ) : (
+              <>
+                <Play className="w-3.5 h-3.5 fill-current text-orange-warm" />
+                <span>Simulate Vehicle Movement</span>
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* Leaflet Map Div */}
+        <div 
+          ref={mapRef} 
+          className="w-full h-64 rounded-lg overflow-hidden border border-sage/60 z-10" 
+          style={{ minHeight: '260px' }}
+        />
+
+        {/* Route Details Bar */}
+        <div className="flex items-center justify-between text-[11px] text-muted px-1 pt-1">
+          <span>🟢 Pickup: {mission.pickup_address.substring(0, 32)}...</span>
+          <span className="font-extrabold text-forest">ETA: ~{etaRemaining} mins</span>
+          <span>🔵 Drop: {mission.delivery_address.substring(0, 32)}...</span>
         </div>
       </div>
 
