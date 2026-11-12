@@ -1,0 +1,5 @@
+/* ====================================================================
+   UNAVULINK NETLIFY REDIRECTS CONFIGURATION
+   Routes all SPA client-side requests to index.html with HTTP 200
+==================================================================== */
+/*    /index.html   200
